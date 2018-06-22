@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jvikstedt/awake/internal/awake"
+	"github.com/jvikstedt/awake"
 )
 
 var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
@@ -19,18 +19,18 @@ type Task struct {
 }
 
 type stepPair struct {
-	step   awake.Step
-	result awake.StepResult
+	step   Step
+	result StepResult
 	err    error
 }
 
-func New(l *log.Logger, steps []awake.Step) *Task {
+func New(l *log.Logger, steps []Step) *Task {
 	stepPairs := make([]*stepPair, len(steps))
 
 	for i, step := range steps {
 		stepPairs[i] = &stepPair{
 			step: step,
-			result: awake.StepResult{
+			result: StepResult{
 				Variables: awake.Variables{},
 			},
 		}
@@ -47,7 +47,7 @@ func (t *Task) Run() {
 	for i, v := range t.stepPairs {
 		t.current = i
 
-		performer, ok := awake.FindPerformer(v.step.Tag)
+		performer, ok := FindPerformer(v.step.Tag)
 		if !ok {
 			fmt.Printf("Argh... performer not found %s\n", v.step.Tag)
 			continue
@@ -60,11 +60,8 @@ func (t *Task) Run() {
 	}
 }
 
-func (t *Task) SetReturnValue(name string, typ string, val interface{}) {
-	t.currentStepPair().result.Variables[name] = awake.Variable{
-		Type: typ,
-		Val:  val,
-	}
+func (t *Task) SetReturnVariable(name string, variable awake.Variable) {
+	t.currentStepPair().result.Variables[name] = variable
 }
 
 func (t *Task) currentStepPair() *stepPair {

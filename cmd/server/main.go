@@ -6,19 +6,18 @@ import (
 	"net/http"
 	"os"
 
-	global "github.com/jvikstedt/awake"
-	"github.com/jvikstedt/awake/internal/awake"
+	"github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/internal/task"
 )
 
 func main() {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 
-	awake.RegisterPerformer("EQUAL", Equal{})
-	awake.RegisterPerformer("HTTP", HTTP{})
+	task.RegisterPerformer("EQUAL", Equal{})
+	task.RegisterPerformer("HTTP", HTTP{})
 
-	steps := []awake.Step{
-		awake.Step{
+	steps := []task.Step{
+		task.Step{
 			Tag: "HTTP",
 			Variables: awake.Variables{
 				"url": awake.Variable{
@@ -27,7 +26,7 @@ func main() {
 				},
 			},
 		},
-		awake.Step{
+		task.Step{
 			Tag: "EQUAL",
 			Variables: awake.Variables{
 				"actual": awake.Variable{
@@ -49,7 +48,7 @@ func main() {
 
 type Equal struct{}
 
-func (e Equal) Perform(scope global.Scope) error {
+func (e Equal) Perform(scope awake.Scope) error {
 	actual, _ := scope.ValueAsRaw("actual")
 	expected, _ := scope.ValueAsRaw("expected")
 
@@ -62,14 +61,17 @@ func (e Equal) Perform(scope global.Scope) error {
 
 type HTTP struct{}
 
-func (h HTTP) Perform(scope global.Scope) error {
+func (h HTTP) Perform(scope awake.Scope) error {
 	url, _ := scope.ValueAsString("url")
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 
-	scope.SetReturnValue("code", "integer", resp.StatusCode)
+	scope.SetReturnVariable("code", awake.Variable{
+		Type: "integer",
+		Val:  resp.StatusCode,
+	})
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package awake
+package task
 
 import "github.com/jvikstedt/awake"
 
