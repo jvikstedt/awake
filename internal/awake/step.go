@@ -5,6 +5,9 @@ type Variable struct {
 	Val  interface{} `json:"val"`
 }
 
+type Variables map[string]Variable
+
 type Step struct {
 	Tag
+	Variables
 }

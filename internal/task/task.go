@@ -2,11 +2,18 @@ package task
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/jvikstedt/awake/internal/awake"
 )
 
+var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
+
 type Task struct {
+	log       *log.Logger
 	current   int
 	stepPairs []*stepPair
 }
@@ -17,17 +24,20 @@ type stepPair struct {
 	err    error
 }
 
-func New(steps []awake.Step) *Task {
+func New(l *log.Logger, steps []awake.Step) *Task {
 	stepPairs := make([]*stepPair, len(steps))
 
 	for i, step := range steps {
 		stepPairs[i] = &stepPair{
-			step:   step,
-			result: awake.StepResult{},
+			step: step,
+			result: awake.StepResult{
+				Variables: awake.Variables{},
+			},
 		}
 	}
 
 	return &Task{
+		log:       l,
 		current:   0,
 		stepPairs: stepPairs,
 	}
@@ -50,24 +60,131 @@ func (t *Task) Run() {
 	}
 }
 
+func (t *Task) SetReturnValue(name string, typ string, val interface{}) {
+	t.currentStepPair().result.Variables[name] = awake.Variable{
+		Type: typ,
+		Val:  val,
+	}
+}
+
+func (t *Task) currentStepPair() *stepPair {
+	return t.stepPairs[t.current]
+}
+
 // Implements awake.Scope
 
 func (t *Task) ValueAsRaw(name string) (interface{}, bool) {
-	return nil, false
+	currentStepPair := t.currentStepPair()
+
+	v, ok := currentStepPair.step.Variables[name]
+	if !ok {
+		t.log.Printf("Could not find variable by name: %s\n", name)
+		return nil, ok
+	}
+
+	val, err := t.getValue(v)
+	if err != nil {
+		t.log.Println(err)
+		return nil, false
+	}
+
+	return val, true
 }
 
 func (t *Task) ValueAsString(name string) (string, bool) {
-	return "", false
+	v, ok := t.ValueAsRaw(name)
+	if !ok {
+		return "", ok
+	}
+
+	asStr, ok := v.(string)
+	return asStr, ok
 }
 
 func (t *Task) ValueAsInt(name string) (int, bool) {
-	return 0, false
+	v, ok := t.ValueAsRaw(name)
+	if !ok {
+		return 0, ok
+	}
+
+	val, err := t.handleInt(v)
+	if err != nil {
+		return 0, false
+	}
+
+	return val, true
 }
 
 func (t *Task) ValueAsFloat(name string) (float64, bool) {
-	return 0, false
+	v, ok := t.ValueAsRaw(name)
+	if !ok {
+		return 0, ok
+	}
+
+	asFloat64, ok := v.(float64)
+	return asFloat64, ok
 }
 
 func (t *Task) ValueAsBool(name string) (bool, bool) {
-	return false, false
+	v, ok := t.ValueAsRaw(name)
+	if !ok {
+		return false, ok
+	}
+
+	asBool, ok := v.(bool)
+	return asBool, ok
+}
+
+func (t *Task) handleInt(val interface{}) (int, error) {
+	switch v := val.(type) {
+	case int:
+		return v, nil
+	case float64:
+		return int(v), nil
+	default:
+		return 0, fmt.Errorf("Expected %v to be either int or float64, but was %T", val, val)
+	}
+}
+
+func (t *Task) handleDynamic(val interface{}) (interface{}, error) {
+	asStr, ok := val.(string)
+	if !ok {
+		return nil, fmt.Errorf("Expected %v to be string but got %T", val, val)
+	}
+
+	matches := dynamicRegexp.FindAllString(asStr, -1)
+
+	if len(matches) == 1 && len(matches[0]) == len(asStr) {
+		s := strings.Split(matches[0][2:len(matches[0])-1], ":")
+		i, err := strconv.Atoi(s[0])
+		if err != nil {
+			return nil, err
+		}
+		return t.stepPairs[i].result.Variables[s[1]].Val, nil
+	}
+
+	compiled := asStr
+
+	for _, m := range matches {
+		s := strings.Split(m[2:len(m)-1], ":")
+		i, err := strconv.Atoi(s[0])
+		if err != nil {
+			return nil, err
+		}
+		scopeValAsStr := fmt.Sprintf("%v", t.stepPairs[i].result.Variables[s[1]].Val)
+		compiled = strings.Replace(compiled, m, scopeValAsStr, -1)
+	}
+
+	return compiled, nil
+}
+
+func (t *Task) getValue(v awake.Variable) (interface{}, error) {
+	switch v.Type {
+	case "integer":
+		return t.handleInt(v.Val)
+	case "dynamic":
+		return t.handleDynamic(v.Val)
+	default:
+		return v.Val, nil
+	}
 }

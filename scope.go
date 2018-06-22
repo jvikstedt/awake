@@ -7,4 +7,5 @@ type Scope interface {
 	ValueAsInt(name string) (int, bool)
 	ValueAsFloat(name string) (float64, bool)
 	ValueAsBool(name string) (bool, bool)
+	SetReturnValue(name string, typ string, val interface{})
 }

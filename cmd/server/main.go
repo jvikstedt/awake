@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 
 	global "github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/internal/awake"
@@ -9,23 +12,64 @@ import (
 )
 
 func main() {
-	awake.RegisterPerformer("ASSERT_EQUAL", assertEqual{})
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+
+	awake.RegisterPerformer("EQUAL", Equal{})
+	awake.RegisterPerformer("HTTP", HTTP{})
 
 	steps := []awake.Step{
 		awake.Step{
-			Tag: "ASSERT_EQUAL",
+			Tag: "HTTP",
+			Variables: awake.Variables{
+				"url": awake.Variable{
+					Type: "string",
+					Val:  "https://www.google.fi/",
+				},
+			},
+		},
+		awake.Step{
+			Tag: "EQUAL",
+			Variables: awake.Variables{
+				"actual": awake.Variable{
+					Type: "dynamic",
+					Val:  "${0:code}",
+				},
+				"expected": awake.Variable{
+					Type: "integer",
+					Val:  200,
+				},
+			},
 		},
 	}
 
-	task := task.New(steps)
+	task := task.New(logger, steps)
 
 	task.Run()
 }
 
-type assertEqual struct {
+type Equal struct{}
+
+func (e Equal) Perform(scope global.Scope) error {
+	actual, _ := scope.ValueAsRaw("actual")
+	expected, _ := scope.ValueAsRaw("expected")
+
+	if actual != expected {
+		return fmt.Errorf("Expected to be %v but got %v", expected, actual)
+	}
+
+	return nil
 }
 
-func (ae assertEqual) Perform(scope global.Scope) error {
-	fmt.Println("performing")
+type HTTP struct{}
+
+func (h HTTP) Perform(scope global.Scope) error {
+	url, _ := scope.ValueAsString("url")
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	scope.SetReturnValue("code", "integer", resp.StatusCode)
+
 	return nil
 }
