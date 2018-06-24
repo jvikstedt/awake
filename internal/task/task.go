@@ -49,13 +49,13 @@ func (t *Task) Run() {
 
 		performer, ok := FindPerformer(v.step.Tag)
 		if !ok {
-			fmt.Printf("Argh... performer not found %s\n", v.step.Tag)
+			t.log.Printf("Argh... performer not found %s\n", v.step.Tag)
 			continue
 		}
 
 		err := performer.Perform(t)
 		if err != nil {
-			fmt.Println(err)
+			t.log.Println(err)
 		}
 	}
 }
