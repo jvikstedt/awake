@@ -13,43 +13,37 @@ import (
 var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
 
 type Task struct {
-	log       *log.Logger
-	current   int
-	stepPairs []*stepPair
+	log     *log.Logger
+	current int
+	steps   []*Step
 }
 
-type stepPair struct {
-	step   Step
-	result StepResult
-	err    error
-}
+func New(l *log.Logger, stepConfigs []StepConfig) *Task {
+	steps := make([]*Step, len(stepConfigs))
 
-func New(l *log.Logger, steps []Step) *Task {
-	stepPairs := make([]*stepPair, len(steps))
-
-	for i, step := range steps {
-		stepPairs[i] = &stepPair{
-			step: step,
-			result: StepResult{
+	for i, stepConfig := range stepConfigs {
+		steps[i] = &Step{
+			Conf: stepConfig,
+			Result: StepResult{
 				Variables: awake.Variables{},
 			},
 		}
 	}
 
 	return &Task{
-		log:       l,
-		current:   0,
-		stepPairs: stepPairs,
+		log:     l,
+		current: 0,
+		steps:   steps,
 	}
 }
 
 func (t *Task) Run() {
-	for i, v := range t.stepPairs {
+	for i, v := range t.steps {
 		t.current = i
 
-		performer, ok := FindPerformer(v.step.Tag)
+		performer, ok := FindPerformer(v.Conf.Tag)
 		if !ok {
-			t.log.Printf("Argh... performer not found %s\n", v.step.Tag)
+			t.log.Printf("Argh... performer not found %s\n", v.Conf.Tag)
 			continue
 		}
 
@@ -61,19 +55,19 @@ func (t *Task) Run() {
 }
 
 func (t *Task) SetReturnVariable(name string, variable awake.Variable) {
-	t.currentStepPair().result.Variables[name] = variable
+	t.currentStep().Result.Variables[name] = variable
 }
 
-func (t *Task) currentStepPair() *stepPair {
-	return t.stepPairs[t.current]
+func (t *Task) currentStep() *Step {
+	return t.steps[t.current]
 }
 
 // Implements awake.Scope
 
 func (t *Task) ValueAsRaw(name string) (interface{}, bool) {
-	currentStepPair := t.currentStepPair()
+	currentStepPair := t.currentStep()
 
-	v, ok := currentStepPair.step.Variables[name]
+	v, ok := currentStepPair.Conf.Variables[name]
 	if !ok {
 		t.log.Printf("Could not find variable by name: %s\n", name)
 		return nil, ok
@@ -157,7 +151,7 @@ func (t *Task) handleDynamic(val interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		return t.stepPairs[i].result.Variables[s[1]].Val, nil
+		return t.steps[i].Result.Variables[s[1]].Val, nil
 	}
 
 	compiled := asStr
@@ -168,7 +162,7 @@ func (t *Task) handleDynamic(val interface{}) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		scopeValAsStr := fmt.Sprintf("%v", t.stepPairs[i].result.Variables[s[1]].Val)
+		scopeValAsStr := fmt.Sprintf("%v", t.steps[i].Result.Variables[s[1]].Val)
 		compiled = strings.Replace(compiled, m, scopeValAsStr, -1)
 	}
 

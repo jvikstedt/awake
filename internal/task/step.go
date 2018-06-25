@@ -1,8 +1,7 @@
 package task
 
-import "github.com/jvikstedt/awake"
-
 type Step struct {
-	Tag
-	awake.Variables
+	Conf   StepConfig
+	Result StepResult
+	Err    error
 }

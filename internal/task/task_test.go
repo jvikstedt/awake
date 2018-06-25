@@ -50,11 +50,11 @@ func TestValueAsRaw(t *testing.T) {
 		},
 	}
 
-	steps := []Step{
+	stepConfigs := []StepConfig{
 		{Tag: "FOO", Variables: variables},
 	}
 
-	task := New(logger, steps)
+	task := New(logger, stepConfigs)
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
 			val, ok := task.ValueAsRaw(tc.name)
@@ -81,7 +81,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 		{tname: "missing", name: "foo", val: nil, ok: false},
 	}
 
-	steps := []Step{
+	steps := []StepConfig{
 		{Tag: "HTTP", Variables: awake.Variables{}},
 		{
 			Tag: "ASSERT",
@@ -105,10 +105,10 @@ func TestValueAsRawDynamic(t *testing.T) {
 	task := New(logger, steps)
 	task.current = 1
 
-	task.stepPairs[0].result.Variables["token"] = awake.Variable{Type: "string", Val: "abc123"}
-	task.stepPairs[0].result.Variables["code"] = awake.Variable{Type: "integer", Val: 200}
-	task.stepPairs[0].result.Variables["username"] = awake.Variable{Type: "string", Val: "foo"}
-	task.stepPairs[0].result.Variables["password"] = awake.Variable{Type: "string", Val: "bar"}
+	task.steps[0].Result.Variables["token"] = awake.Variable{Type: "string", Val: "abc123"}
+	task.steps[0].Result.Variables["code"] = awake.Variable{Type: "integer", Val: 200}
+	task.steps[0].Result.Variables["username"] = awake.Variable{Type: "string", Val: "foo"}
+	task.steps[0].Result.Variables["password"] = awake.Variable{Type: "string", Val: "bar"}
 
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {

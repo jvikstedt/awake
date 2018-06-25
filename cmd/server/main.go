@@ -22,8 +22,8 @@ func main() {
 
 	registerPerformers()
 
-	steps := []task.Step{
-		task.Step{
+	steps := []task.StepConfig{
+		task.StepConfig{
 			Tag: "HTTP",
 			Variables: awake.Variables{
 				"url": awake.Variable{
@@ -32,7 +32,7 @@ func main() {
 				},
 			},
 		},
-		task.Step{
+		task.StepConfig{
 			Tag: "EQUAL",
 			Variables: awake.Variables{
 				"actual": awake.Variable{
