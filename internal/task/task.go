@@ -37,21 +37,20 @@ func New(l *log.Logger, stepConfigs []StepConfig) *Task {
 	}
 }
 
-func (t *Task) Run() {
+func (t *Task) Run() []*Step {
 	for i, v := range t.steps {
 		t.current = i
 
 		performer, ok := FindPerformer(v.Conf.Tag)
 		if !ok {
-			t.log.Printf("Argh... performer not found %s\n", v.Conf.Tag)
+			v.Err = fmt.Errorf("argh... performer not found %s", v.Conf.Tag)
 			continue
 		}
 
-		err := performer.Perform(t)
-		if err != nil {
-			t.log.Println(err)
-		}
+		v.Err = performer.Perform(t)
 	}
+
+	return t.steps
 }
 
 func (t *Task) SetReturnVariable(name string, variable awake.Variable) {

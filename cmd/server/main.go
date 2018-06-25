@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,7 +23,7 @@ func main() {
 
 	registerPerformers()
 
-	steps := []task.StepConfig{
+	stepConfigs := []task.StepConfig{
 		task.StepConfig{
 			Tag: "HTTP",
 			Variables: awake.Variables{
@@ -47,7 +48,9 @@ func main() {
 		},
 	}
 
-	task := task.New(logger, steps)
+	task := task.New(logger, stepConfigs)
 
-	task.Run()
+	steps := task.Run()
+	data, _ := json.MarshalIndent(steps, "", "\t")
+	logger.Printf("%s\n", data)
 }
