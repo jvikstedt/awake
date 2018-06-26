@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/task"
 	"github.com/jvikstedt/awake/plugin"
@@ -25,55 +26,26 @@ func main() {
 
 	registerPerformers(logger, appPath)
 
-	stepConfigs := []task.StepConfig{
-		task.StepConfig{
-			Tag: "builtin_http",
-			Variables: awake.Variables{
-				"url": awake.Variable{
-					Type: "string",
-					Val:  "https://www.google.fi/",
-				},
-			},
-		},
-		task.StepConfig{
-			Tag: "builtin_equal",
-			Variables: awake.Variables{
-				"actual": awake.Variable{
-					Type: "dynamic",
-					Val:  "${0:code}",
-				},
-				"expected": awake.Variable{
-					Type: "integer",
-					Val:  200,
-				},
-			},
-		},
-	}
-
-	job := task.Job{
-		ID:          1,
-		Cron:        "@every 5s",
-		StepConfigs: stepConfigs,
+	conf, err := loadConfig(logger, appPath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	scheduler := cron.New(logger)
 
-	scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
-		t := task.New(logger, job.StepConfigs)
-		steps := t.Run()
+	for _, j := range conf.Jobs {
+		scheduler.AddEntry(cron.EntryID(j.ID), j.Cron, func(id cron.EntryID) {
+			t := task.New(logger, j.StepConfigs)
+			steps := t.Run()
 
-		data, _ := json.MarshalIndent(steps, "", "  ")
-		logger.Printf("%s\n", data)
-	})
+			data, _ := json.MarshalIndent(steps, "", "  ")
+			logger.Printf("%s\n", data)
+		})
+	}
 
 	scheduler.Start()
 	defer scheduler.Stop()
-
-	// task := task.New(logger, stepConfigs)
-
-	// steps := task.Run()
-	// data, _ := json.MarshalIndent(steps, "", "  ")
-	// logger.Printf("%s\n", data)
 }
 
 func registerPerformers(logger *log.Logger, appPath string) {
@@ -90,4 +62,22 @@ func registerPerformers(logger *log.Logger, appPath string) {
 		}
 		task.RegisterPerformer(task.Tag(performer.Tag()), performer)
 	})
+}
+
+type config struct {
+	Jobs []task.Job `json:"jobs"`
+}
+
+func loadConfig(logger *log.Logger, appPath string) (config, error) {
+	data, err := ioutil.ReadFile(filepath.Join(appPath, "config.json"))
+	if err != nil {
+		return config{}, err
+	}
+
+	conf := config{}
+	if err := json.Unmarshal(data, &conf); err != nil {
+		return config{}, err
+	}
+
+	return conf, nil
 }
