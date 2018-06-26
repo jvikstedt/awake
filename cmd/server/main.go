@@ -51,6 +51,6 @@ func main() {
 	task := task.New(logger, stepConfigs)
 
 	steps := task.Run()
-	data, _ := json.MarshalIndent(steps, "", "\t")
+	data, _ := json.MarshalIndent(steps, "", "  ")
 	logger.Printf("%s\n", data)
 }

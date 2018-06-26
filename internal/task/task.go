@@ -57,6 +57,20 @@ func (t *Task) SetReturnVariable(name string, variable awake.Variable) {
 	t.currentStep().Result.Variables[name] = variable
 }
 
+func (t *Task) Variables() awake.Variables {
+	vars := awake.Variables{}
+	for key, v := range t.currentStep().Conf.Variables {
+		val, err := t.getValue(v)
+		if err != nil {
+			t.log.Println(err)
+			continue
+		}
+		vars[key] = awake.Variable{Type: v.Type, Val: val}
+	}
+
+	return vars
+}
+
 func (t *Task) currentStep() *Step {
 	return t.steps[t.current]
 }
