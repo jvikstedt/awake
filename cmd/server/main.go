@@ -27,7 +27,7 @@ func main() {
 
 	stepConfigs := []task.StepConfig{
 		task.StepConfig{
-			Tag: "HTTP",
+			Tag: "builtin_http",
 			Variables: awake.Variables{
 				"url": awake.Variable{
 					Type: "string",
@@ -36,7 +36,7 @@ func main() {
 			},
 		},
 		task.StepConfig{
-			Tag: "EQUAL",
+			Tag: "builtin_equal",
 			Variables: awake.Variables{
 				"actual": awake.Variable{
 					Type: "dynamic",
