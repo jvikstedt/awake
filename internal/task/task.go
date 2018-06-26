@@ -44,10 +44,13 @@ func (t *Task) Run() []*Step {
 		performer, ok := FindPerformer(v.Conf.Tag)
 		if !ok {
 			v.Err = fmt.Errorf("argh... performer not found %s", v.Conf.Tag)
+			v.ErrMsg = v.Err.Error()
 			continue
 		}
 
-		v.Err = performer.Perform(t)
+		if v.Err = performer.Perform(t); v.Err != nil {
+			v.ErrMsg = v.Err.Error()
+		}
 	}
 
 	return t.steps

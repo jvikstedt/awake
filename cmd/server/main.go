@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/smtp"
 	"os"
 	"path/filepath"
 
@@ -32,6 +33,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set up authentication information for mailer
+	auth := smtp.PlainAuth(
+		"",
+		conf.MailConfig.Username,
+		conf.MailConfig.Password,
+		conf.MailConfig.Host,
+	)
+
 	scheduler := cron.New(logger)
 
 	for _, j := range conf.Jobs {
@@ -39,8 +48,15 @@ func main() {
 			t := task.New(logger, j.StepConfigs)
 			steps := t.Run()
 
-			data, _ := json.MarshalIndent(steps, "", "  ")
-			logger.Printf("%s\n", data)
+		Loop:
+			for _, s := range steps {
+				if s.Err != nil {
+					data, _ := json.MarshalIndent(steps, "", "  ")
+					logger.Printf("%s\n", data)
+					mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", j.ID), data)
+					break Loop
+				}
+			}
 		})
 	}
 
@@ -64,8 +80,19 @@ func registerPerformers(logger *log.Logger, appPath string) {
 	})
 }
 
+type mailConfig struct {
+	Identity string `json:"identity"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	To       string `json:"to"`
+	From     string `json:"from"`
+}
+
 type config struct {
-	Jobs []task.Job `json:"jobs"`
+	Jobs       []task.Job `json:"jobs"`
+	MailConfig mailConfig `json:"mailConfig"`
 }
 
 func loadConfig(logger *log.Logger, appPath string) (config, error) {
@@ -80,4 +107,22 @@ func loadConfig(logger *log.Logger, appPath string) (config, error) {
 	}
 
 	return conf, nil
+}
+
+func mail(logger *log.Logger, auth smtp.Auth, conf mailConfig, subject string, body []byte) {
+	msg := "From: " + conf.From + "\n" +
+		"To: " + conf.To + "\n" +
+		"Subject: " + subject + "\n\n" +
+		string(body)
+
+	err := smtp.SendMail(
+		fmt.Sprintf("%s:%s", conf.Host, conf.Port),
+		auth,
+		conf.From,
+		[]string{conf.To},
+		[]byte(msg),
+	)
+	if err != nil {
+		logger.Println(err)
+	}
 }
