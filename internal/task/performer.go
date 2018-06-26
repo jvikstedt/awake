@@ -4,6 +4,7 @@ import "github.com/jvikstedt/awake"
 
 // Performer is registered to system as plugin and are used to execute steps.
 type Performer interface {
+	Tag() string
 	Perform(awake.Scope) error
 }
 

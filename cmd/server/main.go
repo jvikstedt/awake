@@ -9,6 +9,7 @@ import (
 	"github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/task"
+	"github.com/jvikstedt/awake/plugin"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	defer f.Close()
 	logger := log.New(f, "", log.LstdFlags)
 
-	registerPerformers()
+	registerPerformers(logger, appPath)
 
 	stepConfigs := []task.StepConfig{
 		task.StepConfig{
@@ -73,4 +74,20 @@ func main() {
 	// steps := task.Run()
 	// data, _ := json.MarshalIndent(steps, "", "  ")
 	// logger.Printf("%s\n", data)
+}
+
+func registerPerformers(logger *log.Logger, appPath string) {
+	plugin.BuiltinPerformers(func(performer task.Performer) {
+		logger.Printf("Registering builtin performer %s\n", performer.Tag())
+		task.RegisterPerformer(task.Tag(performer.Tag()), performer)
+	})
+
+	plugin.PluginPerformers(filepath.Join(appPath, "plugins"), func(performer task.Performer, err error) {
+		logger.Printf("Registering plugin performer %s\n", performer.Tag())
+		if err != nil {
+			logger.Println(err)
+			return
+		}
+		task.RegisterPerformer(task.Tag(performer.Tag()), performer)
+	})
 }

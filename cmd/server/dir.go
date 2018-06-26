@@ -15,7 +15,10 @@ func getApplicationPath() string {
 	homeDir := usr.HomeDir
 
 	rootDir := filepath.Join(homeDir, ".awake")
+	pluginDir := filepath.Join(rootDir, "plugins")
 
 	os.MkdirAll(rootDir, os.ModePerm)
+	os.MkdirAll(pluginDir, os.ModePerm)
+
 	return rootDir
 }
