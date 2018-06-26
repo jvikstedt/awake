@@ -53,7 +53,9 @@ func main() {
 				if s.Err != nil {
 					data, _ := json.MarshalIndent(steps, "", "  ")
 					logger.Printf("%s\n", data)
-					mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", j.ID), data)
+					if j.MailerEnabled {
+						mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", j.ID), data)
+					}
 					break Loop
 				}
 			}
