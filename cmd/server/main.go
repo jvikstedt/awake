@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/jvikstedt/awake"
+	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/task"
 )
 
@@ -48,9 +49,28 @@ func main() {
 		},
 	}
 
-	task := task.New(logger, stepConfigs)
+	job := task.Job{
+		ID:          1,
+		Cron:        "@every 5s",
+		StepConfigs: stepConfigs,
+	}
 
-	steps := task.Run()
-	data, _ := json.MarshalIndent(steps, "", "  ")
-	logger.Printf("%s\n", data)
+	scheduler := cron.New(logger)
+
+	scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+		t := task.New(logger, job.StepConfigs)
+		steps := t.Run()
+
+		data, _ := json.MarshalIndent(steps, "", "  ")
+		logger.Printf("%s\n", data)
+	})
+
+	scheduler.Start()
+	defer scheduler.Stop()
+
+	// task := task.New(logger, stepConfigs)
+
+	// steps := task.Run()
+	// data, _ := json.MarshalIndent(steps, "", "  ")
+	// logger.Printf("%s\n", data)
 }
