@@ -48,11 +48,12 @@ func main() {
 			t := task.New(logger, j.StepConfigs)
 			steps := t.Run()
 
+			data, _ := json.MarshalIndent(steps, "", "  ")
+			logger.Printf("%s\n", data)
+
 		Loop:
 			for _, s := range steps {
 				if s.Err != nil {
-					data, _ := json.MarshalIndent(steps, "", "  ")
-					logger.Printf("%s\n", data)
 					if j.MailerEnabled {
 						mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", j.ID), data)
 					}

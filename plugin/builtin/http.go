@@ -1,6 +1,7 @@
 package builtin
 
 import (
+	"io/ioutil"
 	"net/http"
 
 	"github.com/jvikstedt/awake"
@@ -18,10 +19,18 @@ func (h HTTP) Perform(scope awake.Scope) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 
 	scope.SetReturnVariable("code", awake.Variable{
 		Type: "integer",
 		Val:  resp.StatusCode,
+	})
+
+	scope.SetReturnVariable("body", awake.Variable{
+		Type: "bytes",
+		Val:  bodyBytes,
 	})
 
 	return nil

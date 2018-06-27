@@ -11,6 +11,7 @@ type Variables map[string]Variable
 type Scope interface {
 	ValueAsRaw(name string) (interface{}, bool)
 	ValueAsString(name string) (string, bool)
+	ValueAsBytes(name string) ([]byte, bool)
 	ValueAsInt(name string) (int, bool)
 	ValueAsFloat(name string) (float64, bool)
 	ValueAsBool(name string) (bool, bool)

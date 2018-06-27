@@ -108,6 +108,16 @@ func (t *Task) ValueAsString(name string) (string, bool) {
 	return asStr, ok
 }
 
+func (t *Task) ValueAsBytes(name string) ([]byte, bool) {
+	v, ok := t.ValueAsRaw(name)
+	if !ok {
+		return []byte{}, ok
+	}
+
+	asBytes, ok := v.([]byte)
+	return asBytes, ok
+}
+
 func (t *Task) ValueAsInt(name string) (int, bool) {
 	v, ok := t.ValueAsRaw(name)
 	if !ok {

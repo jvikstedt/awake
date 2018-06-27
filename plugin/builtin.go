@@ -9,6 +9,7 @@ func BuiltinPerformers(fn func(task.Performer)) {
 	performers := []task.Performer{
 		builtin.Equal{},
 		builtin.HTTP{},
+		builtin.JSON{},
 	}
 
 	for _, v := range performers {
