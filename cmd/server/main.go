@@ -68,10 +68,10 @@ func main() {
 }
 
 func registerPerformers(logger *log.Logger, appPath string) {
-	plugin.BuiltinPerformers(func(performer task.Performer) {
-		logger.Printf("Registering builtin performer %s\n", performer.Tag())
-		task.RegisterPerformer(task.Tag(performer.Tag()), performer)
-	})
+	for _, p := range plugin.BuiltinPerformers() {
+		logger.Printf("Registering builtin performer %s\n", p.Tag())
+		task.RegisterPerformer(task.Tag(p.Tag()), p)
+	}
 
 	plugin.PluginPerformers(filepath.Join(appPath, "plugins"), func(performer task.Performer, err error) {
 		logger.Printf("Registering plugin performer %s\n", performer.Tag())
