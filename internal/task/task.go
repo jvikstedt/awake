@@ -197,9 +197,9 @@ func (t *Task) handleDynamic(val interface{}) (interface{}, error) {
 
 func (t *Task) getValue(v awake.Variable) (interface{}, error) {
 	switch v.Type {
-	case "integer":
+	case awake.TypeInt:
 		return t.handleInt(v.Val)
-	case "dynamic":
+	case awake.TypeDynamic:
 		return t.handleDynamic(v.Val)
 	default:
 		return v.Val, nil

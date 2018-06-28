@@ -1,7 +1,19 @@
 package awake
 
+type Type string
+
+const (
+	TypeInt     Type = "integer"
+	TypeString       = "string"
+	TypeFloat        = "float"
+	TypeBool         = "bool"
+	TypeBytes        = "bytes"
+	TypeDynamic      = "dynamic"
+	TypeAny          = "any"
+)
+
 type Variable struct {
-	Type string      `json:"type"`
+	Type `json:"type"`
 	Val  interface{} `json:"val"`
 }
 

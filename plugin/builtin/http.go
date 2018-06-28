@@ -24,12 +24,12 @@ func (h HTTP) Perform(scope awake.Scope) error {
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 
 	scope.SetReturnVariable("code", awake.Variable{
-		Type: "integer",
+		Type: awake.TypeInt,
 		Val:  resp.StatusCode,
 	})
 
 	scope.SetReturnVariable("body", awake.Variable{
-		Type: "bytes",
+		Type: awake.TypeBytes,
 		Val:  bodyBytes,
 	})
 

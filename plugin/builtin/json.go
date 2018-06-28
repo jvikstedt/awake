@@ -18,7 +18,7 @@ func (j JSON) Perform(scope awake.Scope) error {
 
 	result := gjson.GetBytes(json, path)
 
-	scope.SetReturnVariable(returnName, awake.Variable{Type: "unknown", Val: result.Value()})
+	scope.SetReturnVariable(returnName, awake.Variable{Type: awake.TypeAny, Val: result.Value()})
 
 	return nil
 }
