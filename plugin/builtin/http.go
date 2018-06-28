@@ -29,7 +29,7 @@ func (h HTTP) Perform(scope awake.Scope) error {
 	})
 
 	scope.SetReturnVariable("body", awake.Variable{
-		Type: awake.TypeBytes,
+		Type: awake.TypeArrayBytes,
 		Val:  bodyBytes,
 	})
 

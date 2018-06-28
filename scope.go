@@ -1,15 +1,20 @@
 package awake
 
+import (
+	"reflect"
+)
+
 type Type string
 
 const (
-	TypeInt     Type = "integer"
-	TypeString       = "string"
-	TypeFloat        = "float"
-	TypeBool         = "bool"
-	TypeBytes        = "bytes"
-	TypeDynamic      = "dynamic"
-	TypeAny          = "any"
+	TypeInt        Type = "integer"
+	TypeString          = "string"
+	TypeFloat           = "float"
+	TypeBool            = "bool"
+	TypeByte            = "byte"
+	TypeDynamic         = "dynamic"
+	TypeArrayBytes      = "bytes"
+	TypeAny             = "any"
 )
 
 type Variable struct {
@@ -29,4 +34,31 @@ type Scope interface {
 	ValueAsBool(name string) (bool, bool)
 	SetReturnVariable(name string, variable Variable)
 	Variables() Variables
+}
+
+func ResolveType(i interface{}) Type {
+	switch i.(type) {
+	case int:
+		return TypeInt
+	case string:
+		return TypeString
+	case float64:
+		return TypeFloat
+	case float32:
+		return TypeFloat
+	case bool:
+		return TypeBool
+	}
+
+	if reflect.TypeOf(i).Kind() == reflect.Slice {
+		if reflect.TypeOf(i).Elem().Kind() == reflect.Uint8 {
+			return TypeArrayBytes
+		}
+	}
+
+	return TypeAny
+}
+
+func MakeVariable(i interface{}) Variable {
+	return Variable{Type: ResolveType(i), Val: i}
 }
