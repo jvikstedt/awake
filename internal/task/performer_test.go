@@ -9,6 +9,7 @@ import (
 
 type testPerformer struct{}
 
+func (tp testPerformer) Tag() string               { return "test" }
 func (tp testPerformer) Perform(awake.Scope) error { return nil }
 
 func TestRegisterPerformer(t *testing.T) {
