@@ -10,6 +10,9 @@ func BuiltinPerformers() []task.Performer {
 		builtin.Equal{},
 		builtin.HTTP{},
 		builtin.JSON{},
+		builtin.DiskUsage{},
+		builtin.LessThan{},
+		builtin.MoreThan{},
 	}
 
 	return performers
