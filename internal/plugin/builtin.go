@@ -13,6 +13,7 @@ func BuiltinPerformers() []domain.Performer {
 		builtin.DiskUsage{},
 		builtin.LessThan{},
 		builtin.MoreThan{},
+		builtin.Template{},
 	}
 
 	return performers
