@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 
 	"github.com/jvikstedt/awake/cron"
-	"github.com/jvikstedt/awake/internal/task"
-	"github.com/jvikstedt/awake/plugin"
+	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/plugin"
 )
 
 func main() {
@@ -45,7 +45,7 @@ func main() {
 
 	for _, j := range conf.Jobs {
 		scheduler.AddEntry(cron.EntryID(j.ID), j.Cron, func(id cron.EntryID) {
-			t := task.New(logger, j.StepConfigs)
+			t := domain.New(logger, j.StepConfigs)
 			steps := t.Run()
 
 			data, _ := json.MarshalIndent(steps, "", "  ")
@@ -70,16 +70,16 @@ func main() {
 func registerPerformers(logger *log.Logger, appPath string) {
 	for _, p := range plugin.BuiltinPerformers() {
 		logger.Printf("Registering builtin performer %s\n", p.Tag())
-		task.RegisterPerformer(task.Tag(p.Tag()), p)
+		domain.RegisterPerformer(domain.Tag(p.Tag()), p)
 	}
 
-	plugin.PluginPerformers(filepath.Join(appPath, "plugins"), func(performer task.Performer, err error) {
+	plugin.PluginPerformers(filepath.Join(appPath, "plugins"), func(performer domain.Performer, err error) {
 		logger.Printf("Registering plugin performer %s\n", performer.Tag())
 		if err != nil {
 			logger.Println(err)
 			return
 		}
-		task.RegisterPerformer(task.Tag(performer.Tag()), performer)
+		domain.RegisterPerformer(domain.Tag(performer.Tag()), performer)
 	})
 }
 
@@ -94,8 +94,8 @@ type mailConfig struct {
 }
 
 type config struct {
-	Jobs       []task.Job `json:"jobs"`
-	MailConfig mailConfig `json:"mailConfig"`
+	Jobs       []domain.Job `json:"jobs"`
+	MailConfig mailConfig   `json:"mailConfig"`
 }
 
 func loadConfig(logger *log.Logger, appPath string) (config, error) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/jvikstedt/awake"
-	"github.com/jvikstedt/awake/plugin/builtin"
+	"github.com/jvikstedt/awake/internal/plugin/builtin"
 )
 
 func TestTag(t *testing.T) {

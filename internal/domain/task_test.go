@@ -1,4 +1,4 @@
-package task
+package domain
 
 import (
 	"bytes"
@@ -112,7 +112,6 @@ func TestValueAsRawDynamic(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
-			t.Log(tc.name)
 			val, ok := task.ValueAsRaw(tc.name)
 			if ok != tc.ok {
 				t.Fatalf("Expected %v to eq %v", ok, tc.ok)

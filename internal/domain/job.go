@@ -1,4 +1,4 @@
-package task
+package domain
 
 type Job struct {
 	ID            int          `json:"id"`
