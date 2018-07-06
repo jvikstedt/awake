@@ -9,7 +9,10 @@ import (
 
 type testPerformer struct{}
 
-func (tp testPerformer) Tag() string               { return "test" }
+func (tp testPerformer) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{Name: "test", DisplayName: "test"}
+}
+
 func (tp testPerformer) Perform(awake.Scope) error { return nil }
 
 func TestRegisterPerformer(t *testing.T) {
@@ -23,7 +26,7 @@ func TestRegisterPerformer(t *testing.T) {
 	for _, v := range tt {
 		t.Run(string(v.tag), func(t *testing.T) {
 			tp := testPerformer{}
-			domain.RegisterPerformer(v.tag, tp)
+			domain.RegisterPerformer(tp)
 			rp, ok := domain.FindPerformer(v.tag)
 			if !ok {
 				t.Fatalf("Could not find performer by tag %s", v.tag)

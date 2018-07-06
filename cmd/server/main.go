@@ -69,17 +69,17 @@ func main() {
 
 func registerPerformers(logger *log.Logger, appPath string) {
 	for _, p := range plugin.BuiltinPerformers() {
-		logger.Printf("Registering builtin performer %s\n", p.Tag())
-		domain.RegisterPerformer(domain.Tag(p.Tag()), p)
+		logger.Printf("Registering builtin performer %s\n", p.Info().Name)
+		domain.RegisterPerformer(p)
 	}
 
 	plugin.PluginPerformers(filepath.Join(appPath, "plugins"), func(performer domain.Performer, err error) {
-		logger.Printf("Registering plugin performer %s\n", performer.Tag())
+		logger.Printf("Registering plugin performer %s\n", performer.Info().Name)
 		if err != nil {
 			logger.Println(err)
 			return
 		}
-		domain.RegisterPerformer(domain.Tag(performer.Tag()), performer)
+		domain.RegisterPerformer(performer)
 	})
 }
 

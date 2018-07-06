@@ -9,11 +9,14 @@ import (
 
 type HTTP struct{}
 
-func (h HTTP) Tag() string {
-	return "builtin_http"
+func (HTTP) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_http",
+		DisplayName: "HTTP",
+	}
 }
 
-func (h HTTP) Perform(scope awake.Scope) error {
+func (HTTP) Perform(scope awake.Scope) error {
 	url, _ := scope.ValueAsString("url")
 	resp, err := http.Get(url)
 	if err != nil {

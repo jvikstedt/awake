@@ -9,8 +9,8 @@ import (
 
 func TestTag(t *testing.T) {
 	json := builtin.JSON{}
-	if json.Tag() != "builtin_json" {
-		t.Errorf("Expected tag to be builtin_json but got %s", json.Tag())
+	if json.Info().Name != "builtin_json" {
+		t.Errorf("Expected tag to be builtin_json but got %s", json.Info().Name)
 	}
 }
 

@@ -8,8 +8,11 @@ import (
 
 type MoreThan struct{}
 
-func (MoreThan) Tag() string {
-	return "builtin_more_than"
+func (MoreThan) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_more_than",
+		DisplayName: "More Than",
+	}
 }
 
 func (MoreThan) Perform(scope awake.Scope) error {

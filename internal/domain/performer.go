@@ -4,7 +4,7 @@ import "github.com/jvikstedt/awake"
 
 // Performer is registered to system as plugin and are used to execute steps.
 type Performer interface {
-	Tag() string
+	Info() awake.PerformerInfo
 	Perform(awake.Scope) error
 }
 
@@ -14,8 +14,8 @@ type Tag string
 var performers = map[Tag]Performer{}
 
 // RegisterPerformer registers performer by tag to global variable
-func RegisterPerformer(tag Tag, p Performer) {
-	performers[tag] = p
+func RegisterPerformer(p Performer) {
+	performers[Tag(p.Info().Name)] = p
 }
 
 func FindPerformer(tag Tag) (Performer, bool) {

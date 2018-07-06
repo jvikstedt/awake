@@ -8,11 +8,14 @@ import (
 
 type Equal struct{}
 
-func (e Equal) Tag() string {
-	return "builtin_equal"
+func (Equal) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_equal",
+		DisplayName: "Equal",
+	}
 }
 
-func (e Equal) Perform(scope awake.Scope) error {
+func (Equal) Perform(scope awake.Scope) error {
 	actual, _ := scope.ValueAsRaw("actual")
 	expected, _ := scope.ValueAsRaw("expected")
 

@@ -9,8 +9,11 @@ import (
 
 type Template struct{}
 
-func (Template) Tag() string {
-	return "builtin_template"
+func (Template) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_template",
+		DisplayName: "Template",
+	}
 }
 
 func (Template) Perform(scope awake.Scope) error {

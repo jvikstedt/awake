@@ -4,6 +4,11 @@ import (
 	"reflect"
 )
 
+type PerformerInfo struct {
+	Name        string
+	DisplayName string
+}
+
 type Type string
 
 const (

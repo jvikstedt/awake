@@ -8,8 +8,11 @@ import (
 
 type DiskUsage struct{}
 
-func (DiskUsage) Tag() string {
-	return "builtin_disk_usage"
+func (DiskUsage) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_disk_usage",
+		DisplayName: "Disk Usage",
+	}
 }
 
 func (DiskUsage) Perform(scope awake.Scope) error {

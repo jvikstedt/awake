@@ -8,11 +8,14 @@ import (
 
 type LessThan struct{}
 
-func (l LessThan) Tag() string {
-	return "builtin_less_than"
+func (LessThan) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_less_than",
+		DisplayName: "Less Than",
+	}
 }
 
-func (l LessThan) Perform(scope awake.Scope) error {
+func (LessThan) Perform(scope awake.Scope) error {
 	actual, _ := scope.ValueAsFloat("actual")
 	expected, _ := scope.ValueAsFloat("expected")
 

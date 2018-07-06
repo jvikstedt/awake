@@ -9,11 +9,14 @@ import (
 
 type JSON struct{}
 
-func (j JSON) Tag() string {
-	return "builtin_json"
+func (JSON) Info() awake.PerformerInfo {
+	return awake.PerformerInfo{
+		Name:        "builtin_json",
+		DisplayName: "JSON",
+	}
 }
 
-func (j JSON) Perform(scope awake.Scope) error {
+func (JSON) Perform(scope awake.Scope) error {
 	data, _ := scope.ValueAsBytes("json")
 	path, _ := scope.ValueAsString("path")
 	returnName, _ := scope.ValueAsString("returnName")
