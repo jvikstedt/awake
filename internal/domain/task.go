@@ -68,6 +68,10 @@ func (t *Task) Variables() awake.Variables {
 			t.log.Println(err)
 			continue
 		}
+		if v.Type == awake.TypeDynamic {
+			vars[key] = awake.MakeVariable(val)
+			continue
+		}
 		vars[key] = awake.Variable{Type: v.Type, Val: val}
 	}
 
