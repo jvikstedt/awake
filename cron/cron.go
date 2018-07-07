@@ -79,6 +79,7 @@ func (c *Scheduler) AddEntry(id EntryID, spec string, execute Execute) error {
 }
 
 func (c *Scheduler) Start() {
+	c.logger.Println("Started cron scheduler")
 	var wg sync.WaitGroup
 Loop:
 	for {
@@ -101,8 +102,9 @@ Loop:
 		}
 	}
 
+	c.logger.Println("Scheduler waiting for jobs to finish...")
 	wg.Wait()
-	c.stop <- struct{}{}
+	c.logger.Println("Stopped scheduler")
 }
 
 func (c *Scheduler) updateOrAddEntry(entry *Entry) {
@@ -115,12 +117,9 @@ func (c *Scheduler) updateOrAddEntry(entry *Entry) {
 	c.entries = append(c.entries, entry)
 }
 
-// Stop stops Scheduler
-// Start should always be called before this
-// Blocks until it really stops
 func (c *Scheduler) Stop() {
+	c.logger.Println("Stopping scheduler...")
 	c.stop <- struct{}{}
-	<-c.stop
 }
 
 func (c *Scheduler) checker(wg *sync.WaitGroup) {

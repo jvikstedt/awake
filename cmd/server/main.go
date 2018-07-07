@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/smtp"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"sync"
 
 	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/domain"
 	"github.com/jvikstedt/awake/internal/plugin"
+	"github.com/jvikstedt/awake/internal/runner"
 )
 
 func main() {
@@ -33,38 +35,72 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Set up authentication information for mailer
-	auth := smtp.PlainAuth(
-		"",
-		conf.MailConfig.Username,
-		conf.MailConfig.Password,
-		conf.MailConfig.Host,
-	)
+	var wg sync.WaitGroup
+
+	runner := runner.New(logger)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		runner.Start()
+	}()
 
 	scheduler := cron.New(logger)
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		scheduler.Start()
+	}()
+
 	for _, j := range conf.Jobs {
-		scheduler.AddEntry(cron.EntryID(j.ID), j.Cron, func(id cron.EntryID) {
-			t := domain.New(logger, j.StepConfigs)
-			steps := t.Run()
-
-			data, _ := json.MarshalIndent(steps, "", "  ")
-			logger.Printf("%s\n", data)
-
-		Loop:
-			for _, s := range steps {
-				if s.Err != nil {
-					if j.MailerEnabled {
-						mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", j.ID), data)
-					}
-					break Loop
-				}
-			}
-		})
+		scheduleJob(scheduler, runner, j)
 	}
 
-	scheduler.Start()
-	defer scheduler.Stop()
+	// Handle signals
+	go func() {
+		sigquit := make(chan os.Signal, 1)
+		signal.Notify(sigquit, os.Interrupt, os.Kill)
+
+		<-sigquit
+
+		log.Println("Stopping everything...")
+		scheduler.Stop()
+		runner.Stop()
+	}()
+
+	wg.Wait()
+}
+
+//	// Set up authentication information for mailer
+//	auth := smtp.PlainAuth(
+//		"",
+//		conf.MailConfig.Username,
+//		conf.MailConfig.Password,
+//		conf.MailConfig.Host,
+//	)
+
+// 		t := domain.New(logger, job.StepConfigs)
+// 		steps := t.Run()
+//
+// 		data, _ := json.MarshalIndent(steps, "", "  ")
+// 		logger.Printf("%s\n", data)
+//
+// 	Loop:
+// 		for _, s := range steps {
+// 			if s.Err != nil {
+// 				if job.MailerEnabled {
+// 					mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", job.ID), data)
+// 				}
+// 				break Loop
+// 			}
+// 		}
+// 	})
+
+func scheduleJob(scheduler *cron.Scheduler, runner *runner.Runner, job domain.Job) {
+	scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+		runner.AddJob(job)
+	})
 }
 
 func registerPerformers(logger *log.Logger, appPath string) {
@@ -112,20 +148,20 @@ func loadConfig(logger *log.Logger, appPath string) (config, error) {
 	return conf, nil
 }
 
-func mail(logger *log.Logger, auth smtp.Auth, conf mailConfig, subject string, body []byte) {
-	msg := "From: " + conf.From + "\n" +
-		"To: " + conf.To + "\n" +
-		"Subject: " + subject + "\n\n" +
-		string(body)
-
-	err := smtp.SendMail(
-		fmt.Sprintf("%s:%s", conf.Host, conf.Port),
-		auth,
-		conf.From,
-		[]string{conf.To},
-		[]byte(msg),
-	)
-	if err != nil {
-		logger.Println(err)
-	}
-}
+// func mail(logger *log.Logger, auth smtp.Auth, conf mailConfig, subject string, body []byte) {
+// 	msg := "From: " + conf.From + "\n" +
+// 		"To: " + conf.To + "\n" +
+// 		"Subject: " + subject + "\n\n" +
+// 		string(body)
+//
+// 	err := smtp.SendMail(
+// 		fmt.Sprintf("%s:%s", conf.Host, conf.Port),
+// 		auth,
+// 		conf.From,
+// 		[]string{conf.To},
+// 		[]byte(msg),
+// 	)
+// 	if err != nil {
+// 		logger.Println(err)
+// 	}
+// }
