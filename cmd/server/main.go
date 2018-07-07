@@ -37,7 +37,7 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	runner := runner.New(logger)
+	runner := runner.New(logger, conf)
 
 	wg.Add(1)
 	go func() {
@@ -72,31 +72,6 @@ func main() {
 	wg.Wait()
 }
 
-//	// Set up authentication information for mailer
-//	auth := smtp.PlainAuth(
-//		"",
-//		conf.MailConfig.Username,
-//		conf.MailConfig.Password,
-//		conf.MailConfig.Host,
-//	)
-
-// 		t := domain.New(logger, job.StepConfigs)
-// 		steps := t.Run()
-//
-// 		data, _ := json.MarshalIndent(steps, "", "  ")
-// 		logger.Printf("%s\n", data)
-//
-// 	Loop:
-// 		for _, s := range steps {
-// 			if s.Err != nil {
-// 				if job.MailerEnabled {
-// 					mail(logger, auth, conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", job.ID), data)
-// 				}
-// 				break Loop
-// 			}
-// 		}
-// 	})
-
 func scheduleJob(scheduler *cron.Scheduler, runner *runner.Runner, job domain.Job) {
 	scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
 		runner.AddJob(job)
@@ -119,49 +94,16 @@ func registerPerformers(logger *log.Logger, appPath string) {
 	})
 }
 
-type mailConfig struct {
-	Identity string `json:"identity"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	To       string `json:"to"`
-	From     string `json:"from"`
-}
-
-type config struct {
-	Jobs       []domain.Job `json:"jobs"`
-	MailConfig mailConfig   `json:"mailConfig"`
-}
-
-func loadConfig(logger *log.Logger, appPath string) (config, error) {
+func loadConfig(logger *log.Logger, appPath string) (domain.Config, error) {
 	data, err := ioutil.ReadFile(filepath.Join(appPath, "config.json"))
 	if err != nil {
-		return config{}, err
+		return domain.Config{}, err
 	}
 
-	conf := config{}
+	conf := domain.Config{}
 	if err := json.Unmarshal(data, &conf); err != nil {
-		return config{}, err
+		return domain.Config{}, err
 	}
 
 	return conf, nil
 }
-
-// func mail(logger *log.Logger, auth smtp.Auth, conf mailConfig, subject string, body []byte) {
-// 	msg := "From: " + conf.From + "\n" +
-// 		"To: " + conf.To + "\n" +
-// 		"Subject: " + subject + "\n\n" +
-// 		string(body)
-//
-// 	err := smtp.SendMail(
-// 		fmt.Sprintf("%s:%s", conf.Host, conf.Port),
-// 		auth,
-// 		conf.From,
-// 		[]string{conf.To},
-// 		[]byte(msg),
-// 	)
-// 	if err != nil {
-// 		logger.Println(err)
-// 	}
-// }
