@@ -19,6 +19,7 @@ const (
 	TypeByte            = "byte"
 	TypeDynamic         = "dynamic"
 	TypeArrayBytes      = "bytes"
+	TypeNil             = "nil"
 	TypeAny             = "any"
 )
 
@@ -39,9 +40,13 @@ type Scope interface {
 	ValueAsBool(name string) (bool, bool)
 	SetReturnVariable(name string, variable Variable)
 	Variables() Variables
+	Errors() []error
 }
 
 func ResolveType(i interface{}) Type {
+	if i == nil {
+		return TypeNil
+	}
 	switch i.(type) {
 	case int:
 		return TypeInt

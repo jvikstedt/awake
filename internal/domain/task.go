@@ -13,12 +13,13 @@ import (
 var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
 
 type Task struct {
-	log     *log.Logger
-	current int
-	steps   []*Step
+	log              *log.Logger
+	current          int
+	steps            []*Step
+	performerConfigs PerformerConfigs
 }
 
-func NewTask(l *log.Logger, stepConfigs []StepConfig) *Task {
+func NewTask(l *log.Logger, performerConfigs PerformerConfigs, stepConfigs []StepConfig) *Task {
 	steps := make([]*Step, len(stepConfigs))
 
 	for i, stepConfig := range stepConfigs {
@@ -28,12 +29,22 @@ func NewTask(l *log.Logger, stepConfigs []StepConfig) *Task {
 				Variables: awake.Variables{},
 			},
 		}
+
+		conf, ok := performerConfigs[steps[i].Conf.Tag]
+		if ok {
+			for key, variable := range conf {
+				if _, ok := steps[i].Conf.Variables[key]; !ok {
+					steps[i].Conf.Variables[key] = variable
+				}
+			}
+		}
 	}
 
 	return &Task{
-		log:     l,
-		current: 0,
-		steps:   steps,
+		log:              l,
+		current:          0,
+		steps:            steps,
+		performerConfigs: performerConfigs,
 	}
 }
 
@@ -58,6 +69,17 @@ func (t *Task) Run() []*Step {
 
 func (t *Task) SetReturnVariable(name string, variable awake.Variable) {
 	t.currentStep().Result.Variables[name] = variable
+}
+
+func (t *Task) Errors() []error {
+	errors := []error{}
+	for i := 0; i < t.current; i++ {
+		if t.steps[i].Err != nil {
+			errors = append(errors, t.steps[i].Err)
+		}
+	}
+
+	return errors
 }
 
 func (t *Task) Variables() awake.Variables {

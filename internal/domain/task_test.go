@@ -54,7 +54,7 @@ func TestValueAsRaw(t *testing.T) {
 		{Tag: "FOO", Variables: variables},
 	}
 
-	task := NewTask(logger, stepConfigs)
+	task := NewTask(logger, PerformerConfigs{}, stepConfigs)
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
 			val, ok := task.ValueAsRaw(tc.name)
@@ -102,7 +102,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 		},
 	}
 
-	task := NewTask(logger, steps)
+	task := NewTask(logger, PerformerConfigs{}, steps)
 	task.current = 1
 
 	task.steps[0].Result.Variables["token"] = awake.Variable{Type: awake.TypeString, Val: "abc123"}

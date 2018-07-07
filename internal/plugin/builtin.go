@@ -14,6 +14,8 @@ func BuiltinPerformers() []domain.Performer {
 		builtin.LessThan{},
 		builtin.MoreThan{},
 		builtin.Template{},
+		builtin.Mailer{},
+		builtin.Errors{},
 	}
 
 	return performers

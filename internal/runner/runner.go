@@ -2,9 +2,7 @@ package runner
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
-	"net/smtp"
 	"sync"
 
 	"github.com/jvikstedt/awake/internal/domain"
@@ -57,44 +55,9 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
-	t := domain.NewTask(r.log, job.StepConfigs)
+	t := domain.NewTask(r.log, r.conf.PerformerConfigs, job.StepConfigs)
 	steps := t.Run()
 
 	data, _ := json.MarshalIndent(steps, "", "  ")
 	r.log.Printf("%s\n", data)
-
-	auth := smtp.PlainAuth(
-		"",
-		r.conf.MailConfig.Username,
-		r.conf.MailConfig.Password,
-		r.conf.MailConfig.Host,
-	)
-
-Loop:
-	for _, s := range steps {
-		if s.Err != nil {
-			if job.MailerEnabled {
-				mail(r.log, auth, r.conf.MailConfig, fmt.Sprintf("Something went wrong with job %d", job.ID), data)
-			}
-			break Loop
-		}
-	}
-}
-
-func mail(logger *log.Logger, auth smtp.Auth, conf domain.MailConfig, subject string, body []byte) {
-	msg := "From: " + conf.From + "\n" +
-		"To: " + conf.To + "\n" +
-		"Subject: " + subject + "\n\n" +
-		string(body)
-
-	err := smtp.SendMail(
-		fmt.Sprintf("%s:%s", conf.Host, conf.Port),
-		auth,
-		conf.From,
-		[]string{conf.To},
-		[]byte(msg),
-	)
-	if err != nil {
-		logger.Println(err)
-	}
 }
