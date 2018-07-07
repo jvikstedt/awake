@@ -7,10 +7,12 @@ import (
 	"github.com/jvikstedt/awake/internal/domain"
 )
 
-type testPerformer struct{}
+type testPerformer struct {
+	Name string
+}
 
 func (tp testPerformer) Info() awake.PerformerInfo {
-	return awake.PerformerInfo{Name: "test", DisplayName: "test"}
+	return awake.PerformerInfo{Name: tp.Name, DisplayName: "test"}
 }
 
 func (tp testPerformer) Perform(awake.Scope) error { return nil }
@@ -25,7 +27,7 @@ func TestRegisterPerformer(t *testing.T) {
 
 	for _, v := range tt {
 		t.Run(string(v.tag), func(t *testing.T) {
-			tp := testPerformer{}
+			tp := testPerformer{Name: string(v.tag)}
 			domain.RegisterPerformer(tp)
 			rp, ok := domain.FindPerformer(v.tag)
 			if !ok {

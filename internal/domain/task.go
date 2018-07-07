@@ -18,7 +18,7 @@ type Task struct {
 	steps   []*Step
 }
 
-func New(l *log.Logger, stepConfigs []StepConfig) *Task {
+func NewTask(l *log.Logger, stepConfigs []StepConfig) *Task {
 	steps := make([]*Step, len(stepConfigs))
 
 	for i, stepConfig := range stepConfigs {
