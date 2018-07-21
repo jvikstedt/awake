@@ -17,6 +17,11 @@ import (
 )
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
 	appPath := getApplicationPath()
 
 	// Setup logger
@@ -57,6 +62,12 @@ func main() {
 		scheduleJob(scheduler, runner, j)
 	}
 
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		startServer(logger, port)
+	}()
+
 	// Handle signals
 	go func() {
 		sigquit := make(chan os.Signal, 1)
@@ -65,6 +76,7 @@ func main() {
 		<-sigquit
 
 		log.Println("Stopping everything...")
+		stopServer(logger)
 		scheduler.Stop()
 		runner.Stop()
 	}()
