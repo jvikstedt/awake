@@ -11,9 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 
-	"github.com/jvikstedt/awake/internal/database"
 	"github.com/jvikstedt/awake/internal/domain"
-	"github.com/jvikstedt/awake/internal/job"
 )
 
 func main() {
@@ -38,26 +36,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := database.NewDB("sqlite3", filepath.Join(appPath, "awake.db"))
+	app, err := newApp(logger, conf, appPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	defer db.Close()
-	if err := database.EnsureTables(db); err != nil {
-		log.Fatal(err)
-	}
-
-	app := newApp(logger, conf, appPath)
 	app.registerPerformers()
-
 	app.startServices()
 
-	jobRepository := job.NewRepository(db)
-
-	jobHandler := job.NewHandler(jobRepository)
-
-	srv := &http.Server{Addr: ":" + port, Handler: handler(logger, jobHandler)}
+	srv := &http.Server{Addr: ":" + port, Handler: handler(
+		logger,
+		app.jobHandler,
+	)}
 
 	go func() {
 		sigint := make(chan os.Signal, 1)

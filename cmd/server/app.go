@@ -5,29 +5,48 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/jvikstedt/awake/cron"
+	"github.com/jvikstedt/awake/internal/database"
 	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/job"
 	"github.com/jvikstedt/awake/internal/plugin"
 	"github.com/jvikstedt/awake/internal/runner"
 )
 
 type App struct {
-	log       *log.Logger
-	wg        sync.WaitGroup
-	config    domain.Config
-	appPath   string
-	scheduler *cron.Scheduler
-	runner    *runner.Runner
+	log           *log.Logger
+	wg            sync.WaitGroup
+	config        domain.Config
+	appPath       string
+	scheduler     *cron.Scheduler
+	runner        *runner.Runner
+	db            *sqlx.DB
+	jobRepository domain.JobRepository
+	jobHandler    *job.Handler
 }
 
-func newApp(logger *log.Logger, config domain.Config, appPath string) *App {
-	return &App{
-		log:       logger,
-		config:    config,
-		appPath:   appPath,
-		scheduler: cron.New(logger),
-		runner:    runner.New(logger, config),
+func newApp(logger *log.Logger, config domain.Config, appPath string) (*App, error) {
+	db, err := database.NewDB("sqlite3", filepath.Join(appPath, "awake.db"))
+	if err != nil {
+		return nil, err
 	}
+	if err := database.EnsureTables(db); err != nil {
+		return nil, err
+	}
+
+	jobRepository := job.NewRepository(db)
+
+	return &App{
+		log:           logger,
+		config:        config,
+		appPath:       appPath,
+		scheduler:     cron.New(logger),
+		runner:        runner.New(logger, config),
+		db:            db,
+		jobRepository: jobRepository,
+		jobHandler:    job.NewHandler(jobRepository),
+	}, nil
 }
 
 func (a *App) startServices() {
@@ -55,6 +74,8 @@ func (a *App) stopServices() {
 
 func (a *App) wait() {
 	a.wg.Wait()
+
+	a.db.Close()
 }
 
 func (a *App) scheduleJob(job domain.Job) {
