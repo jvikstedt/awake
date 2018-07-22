@@ -1,16 +1,21 @@
 package job
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/jvikstedt/awake/internal/domain"
 )
 
 type Handler struct {
+	jobRepository domain.JobRepository
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(jobRepository domain.JobRepository) *Handler {
+	return &Handler{
+		jobRepository: jobRepository,
+	}
 }
 
 func (h *Handler) Handler() http.Handler {
@@ -22,5 +27,14 @@ func (h *Handler) Handler() http.Handler {
 }
 
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
+	jobs, err := h.jobRepository.GetAll()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(jobs)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
