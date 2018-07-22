@@ -36,7 +36,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app := newApp(logger, port, conf, appPath)
+	app := newApp(logger, conf, appPath)
 	app.registerPerformers()
 
 	app.startServices()

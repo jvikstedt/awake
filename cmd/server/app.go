@@ -13,7 +13,6 @@ import (
 
 type App struct {
 	log       *log.Logger
-	port      string
 	wg        sync.WaitGroup
 	config    domain.Config
 	appPath   string
@@ -21,10 +20,9 @@ type App struct {
 	runner    *runner.Runner
 }
 
-func newApp(logger *log.Logger, port string, config domain.Config, appPath string) *App {
+func newApp(logger *log.Logger, config domain.Config, appPath string) *App {
 	return &App{
 		log:       logger,
-		port:      port,
 		config:    config,
 		appPath:   appPath,
 		scheduler: cron.New(logger),
