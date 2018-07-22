@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"path/filepath"
 	"sync"
 
@@ -16,6 +18,8 @@ import (
 
 type App struct {
 	log           *log.Logger
+	port          string
+	srv           *http.Server
 	wg            sync.WaitGroup
 	config        domain.Config
 	appPath       string
@@ -26,7 +30,7 @@ type App struct {
 	jobHandler    *job.Handler
 }
 
-func newApp(logger *log.Logger, config domain.Config, appPath string) (*App, error) {
+func newApp(logger *log.Logger, port string, config domain.Config, appPath string) (*App, error) {
 	db, err := database.NewDB("sqlite3", filepath.Join(appPath, "awake.db"))
 	if err != nil {
 		return nil, err
@@ -36,16 +40,24 @@ func newApp(logger *log.Logger, config domain.Config, appPath string) (*App, err
 	}
 
 	jobRepository := job.NewRepository(db)
+	jobHandler := job.NewHandler(jobRepository)
+
+	srv := &http.Server{Addr: ":" + port, Handler: handler(
+		logger,
+		jobHandler,
+	)}
 
 	return &App{
 		log:           logger,
+		port:          port,
+		srv:           srv,
 		config:        config,
 		appPath:       appPath,
 		scheduler:     cron.New(logger),
 		runner:        runner.New(logger, config),
 		db:            db,
 		jobRepository: jobRepository,
-		jobHandler:    job.NewHandler(jobRepository),
+		jobHandler:    jobHandler,
 	}, nil
 }
 
@@ -65,11 +77,23 @@ func (a *App) startServices() {
 	for _, j := range a.config.Jobs {
 		a.scheduleJob(j)
 	}
+
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+		if err := a.srv.ListenAndServe(); err != http.ErrServerClosed {
+			a.log.Printf("HTTP server ListenAndServe: %v", err)
+		}
+	}()
 }
 
 func (a *App) stopServices() {
 	a.scheduler.Stop()
 	a.runner.Stop()
+
+	if err := a.srv.Shutdown(context.Background()); err != nil {
+		a.log.Printf("HTTP server Shutdown: %v", err)
+	}
 }
 
 func (a *App) wait() {

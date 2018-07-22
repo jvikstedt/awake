@@ -1,12 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -36,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	app, err := newApp(logger, conf, appPath)
+	app, err := newApp(logger, port, conf, appPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -44,25 +42,13 @@ func main() {
 	app.registerPerformers()
 	app.startServices()
 
-	srv := &http.Server{Addr: ":" + port, Handler: handler(
-		logger,
-		app.jobHandler,
-	)}
-
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 
-		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Printf("HTTP server Shutdown: %v", err)
-		}
 		app.stopServices()
 	}()
-
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Printf("HTTP server ListenAndServe: %v", err)
-	}
 
 	app.wait()
 }
