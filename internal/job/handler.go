@@ -13,8 +13,12 @@ func NewHandler() *Handler {
 	return &Handler{}
 }
 
-func (h *Handler) Routes(r chi.Router) {
+func (h *Handler) Handler() http.Handler {
+	r := chi.NewRouter()
+
 	r.Get("/", h.getAll)
+
+	return r
 }
 
 func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {

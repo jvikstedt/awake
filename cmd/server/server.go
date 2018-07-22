@@ -27,7 +27,7 @@ func handler(logger *log.Logger, jobHandler *job.Handler) http.Handler {
 	r.Use(cors.Handler)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/jobs", jobHandler.Routes)
+		r.Mount("/jobs", jobHandler.Handler())
 	})
 
 	return r
