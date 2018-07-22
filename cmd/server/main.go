@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/job"
 )
 
 func main() {
@@ -41,7 +42,9 @@ func main() {
 
 	app.startServices()
 
-	srv := &http.Server{Addr: ":" + port, Handler: handler(logger)}
+	jobHandler := job.NewHandler()
+
+	srv := &http.Server{Addr: ":" + port, Handler: handler(logger, jobHandler)}
 
 	go func() {
 		sigint := make(chan os.Signal, 1)

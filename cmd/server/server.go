@@ -8,9 +8,10 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
+	"github.com/jvikstedt/awake/internal/job"
 )
 
-func handler(logger *log.Logger) http.Handler {
+func handler(logger *log.Logger, jobHandler *job.Handler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -25,8 +26,8 @@ func handler(logger *log.Logger) http.Handler {
 	})
 	r.Use(cors.Handler)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Route("/jobs", jobHandler.Routes)
 	})
 
 	return r
