@@ -20,3 +20,8 @@ func (r *Repository) GetAll() ([]*domain.Job, error) {
 	err := sqlx.Select(r.db, &jobs, `SELECT jobs.* FROM jobs WHERE jobs.deleted_at IS NULL`)
 	return jobs, err
 }
+
+func (r *Repository) GetOne(id int) (*domain.Job, error) {
+	job := &domain.Job{}
+	return job, sqlx.Get(r.db, job, "SELECT jobs.* FROM jobs WHERE id=$1", id)
+}
