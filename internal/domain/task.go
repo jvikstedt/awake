@@ -13,10 +13,9 @@ import (
 var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
 
 type Task struct {
-	log              *log.Logger
-	current          int
-	steps            []*Step
-	performerConfigs PerformerConfigs
+	log     *log.Logger
+	current int
+	steps   []*Step
 }
 
 func NewTask(l *log.Logger, performerConfigs PerformerConfigs, stepConfigs []StepConfig) *Task {
@@ -41,10 +40,9 @@ func NewTask(l *log.Logger, performerConfigs PerformerConfigs, stepConfigs []Ste
 	}
 
 	return &Task{
-		log:              l,
-		current:          0,
-		steps:            steps,
-		performerConfigs: performerConfigs,
+		log:     l,
+		current: 0,
+		steps:   steps,
 	}
 }
 
