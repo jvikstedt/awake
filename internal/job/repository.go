@@ -39,3 +39,30 @@ func (r *Repository) Update(id int, job domain.Job) (domain.Job, error) {
 
 	return r.GetOne(id)
 }
+
+func (r *Repository) Create(job domain.Job) (domain.Job, error) {
+	result, err := r.db.Exec(`INSERT INTO
+		jobs (name, active, cron, created_at, updated_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, job.Name, job.Active, job.Cron)
+	if err != nil {
+		return domain.Job{}, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return domain.Job{}, err
+	}
+
+	return r.GetOne(int(id))
+}
+
+func (r *Repository) Delete(id int) (domain.Job, error) {
+	_, err := r.db.Exec(`UPDATE jobs SET
+		deleted_at = CURRENT_TIMESTAMP,
+		updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?`, id)
+	if err != nil {
+		return domain.Job{}, err
+	}
+
+	return r.GetOne(id)
+}

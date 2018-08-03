@@ -62,3 +62,33 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, i
 
 	return newJob, http.StatusOK, nil
 }
+
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
+	decoder := json.NewDecoder(r.Body)
+	job := domain.Job{}
+
+	if err := decoder.Decode(&job); err != nil {
+		return struct{}{}, http.StatusInternalServerError, err
+	}
+
+	newJob, err := h.jobRepository.Create(job)
+	if err != nil {
+		return struct{}{}, http.StatusInternalServerError, err
+	}
+
+	return newJob, http.StatusOK, nil
+}
+
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
+	id, err := h.hh.URLParamInt(r, "id")
+	if err != nil {
+		return struct{}{}, http.StatusUnprocessableEntity, err
+	}
+
+	newJob, err := h.jobRepository.Delete(id)
+	if err != nil {
+		return struct{}{}, http.StatusInternalServerError, err
+	}
+
+	return newJob, http.StatusOK, nil
+}

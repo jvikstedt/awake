@@ -18,4 +18,6 @@ type JobRepository interface {
 	GetAll() ([]Job, error)
 	GetOne(int) (Job, error)
 	Update(int, Job) (Job, error)
+	Create(Job) (Job, error)
+	Delete(int) (Job, error)
 }
