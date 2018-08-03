@@ -39,13 +39,13 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 		return nil, err
 	}
 
-	jobRepository := job.NewRepository(db)
-	jobHandler := job.NewHandler(jobRepository)
+	api := &Api{}
 
-	api := Api{
-		log:        logger,
-		jobHandler: jobHandler,
-	}
+	jobRepository := job.NewRepository(db)
+	jobHandler := job.NewHandler(api, jobRepository)
+
+	api.log = logger
+	api.jobHandler = jobHandler
 
 	srv := &http.Server{Addr: ":" + port, Handler: api.handler()}
 

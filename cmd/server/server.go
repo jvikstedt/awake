@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -56,4 +58,12 @@ func (a *Api) jsonResponseHandler(handleFunc func(http.ResponseWriter, *http.Req
 			a.log.Printf("Could not encode response to output: %v", err)
 		}
 	}
+}
+
+func (a *Api) URLParamInt(r *http.Request, key string) (int, error) {
+	idStr := chi.URLParam(r, key)
+	if idStr == "" {
+		return 0, fmt.Errorf("URL param %s was empty", key)
+	}
+	return strconv.Atoi(idStr)
 }

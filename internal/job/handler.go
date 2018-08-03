@@ -3,18 +3,18 @@ package job
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/jvikstedt/awake/internal/domain"
 )
 
 type Handler struct {
+	hh            domain.HandlerHelper
 	jobRepository domain.JobRepository
 }
 
-func NewHandler(jobRepository domain.JobRepository) *Handler {
+func NewHandler(hh domain.HandlerHelper, jobRepository domain.JobRepository) *Handler {
 	return &Handler{
+		hh:            hh,
 		jobRepository: jobRepository,
 	}
 }
@@ -29,11 +29,9 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, i
 }
 
 func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
-	idStr := chi.URLParam(r, "id")
-
-	id, err := strconv.Atoi(idStr)
+	id, err := h.hh.URLParamInt(r, "id")
 	if err != nil {
-		return struct{}{}, http.StatusInternalServerError, err
+		return struct{}{}, http.StatusUnprocessableEntity, err
 	}
 
 	job, err := h.jobRepository.GetOne(id)
@@ -45,11 +43,9 @@ func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) (interface{}, i
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
-	idStr := chi.URLParam(r, "id")
-
-	id, err := strconv.Atoi(idStr)
+	id, err := h.hh.URLParamInt(r, "id")
 	if err != nil {
-		return struct{}{}, http.StatusInternalServerError, err
+		return struct{}{}, http.StatusUnprocessableEntity, err
 	}
 
 	decoder := json.NewDecoder(r.Body)
