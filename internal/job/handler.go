@@ -24,6 +24,7 @@ func (h *Handler) Handler() http.Handler {
 
 	r.Get("/", h.getAll)
 	r.Get("/{id}", h.getOne)
+	r.Put("/{id}", h.update)
 
 	return r
 }
@@ -57,6 +58,36 @@ func (h *Handler) getOne(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.NewEncoder(w).Encode(job)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	job := domain.Job{}
+
+	if err := decoder.Decode(&job); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	newJob, err := h.jobRepository.Update(id, job)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(newJob)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

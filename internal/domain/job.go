@@ -15,6 +15,7 @@ type Job struct {
 }
 
 type JobRepository interface {
-	GetAll() ([]*Job, error)
-	GetOne(int) (*Job, error)
+	GetAll() ([]Job, error)
+	GetOne(int) (Job, error)
+	Update(int, Job) (Job, error)
 }
