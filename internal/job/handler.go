@@ -19,77 +19,50 @@ func NewHandler(jobRepository domain.JobRepository) *Handler {
 	}
 }
 
-func (h *Handler) Handler() http.Handler {
-	r := chi.NewRouter()
-
-	r.Get("/", h.getAll)
-	r.Get("/{id}", h.getOne)
-	r.Put("/{id}", h.update)
-
-	return r
-}
-
-func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	jobs, err := h.jobRepository.GetAll()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
-	err = json.NewEncoder(w).Encode(jobs)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+
+	return jobs, http.StatusOK, nil
 }
 
-func (h *Handler) getOne(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
 
 	job, err := h.jobRepository.GetOne(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
 
-	err = json.NewEncoder(w).Encode(job)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	return job, http.StatusOK, nil
 }
 
-func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	idStr := chi.URLParam(r, "id")
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
 
 	decoder := json.NewDecoder(r.Body)
 	job := domain.Job{}
 
 	if err := decoder.Decode(&job); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
 
 	newJob, err := h.jobRepository.Update(id, job)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return struct{}{}, http.StatusInternalServerError, err
 	}
 
-	err = json.NewEncoder(w).Encode(newJob)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	return newJob, http.StatusOK, nil
 }
