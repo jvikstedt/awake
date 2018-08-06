@@ -55,7 +55,7 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
-	t := domain.NewTask(r.log, r.conf.PerformerConfigs, job.StepConfigs)
+	t := domain.NewTask(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
 	steps := t.Run()
 
 	data, _ := json.MarshalIndent(steps, "", "  ")

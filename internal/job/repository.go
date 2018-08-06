@@ -17,7 +17,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func (r *Repository) GetAll() ([]domain.Job, error) {
 	jobs := []domain.Job{}
-	err := sqlx.Select(r.db, &jobs, `SELECT jobs.* FROM jobs WHERE jobs.deleted_at IS NULL`)
+	err := sqlx.Select(r.db, &jobs, `SELECT * FROM jobs WHERE jobs.deleted_at IS NULL`)
 	return jobs, err
 }
 
@@ -31,8 +31,9 @@ func (r *Repository) Update(id int, job domain.Job) (domain.Job, error) {
 		name = ?,
 		active = ?,
 		cron = ?,
+		step_configs = ?,
 		updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?`, job.Name, job.Active, job.Cron, job.ID)
+		WHERE id = ?`, job.Name, job.Active, job.Cron, job.StepConfigs, job.ID)
 	if err != nil {
 		return domain.Job{}, err
 	}
@@ -42,8 +43,8 @@ func (r *Repository) Update(id int, job domain.Job) (domain.Job, error) {
 
 func (r *Repository) Create(job domain.Job) (domain.Job, error) {
 	result, err := r.db.Exec(`INSERT INTO
-		jobs (name, active, cron, created_at, updated_at)
-		VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, job.Name, job.Active, job.Cron)
+		jobs (name, active, cron, step_configs, created_at, updated_at)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, job.Name, job.Active, job.Cron, job.StepConfigs)
 	if err != nil {
 		return domain.Job{}, err
 	}
