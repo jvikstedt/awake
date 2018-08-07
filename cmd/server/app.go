@@ -41,8 +41,11 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 
 	api := &Api{}
 
+	runner := runner.New(logger, config)
+	scheduler := cron.New(logger)
+
 	jobRepository := job.NewRepository(db)
-	jobHandler := job.NewHandler(api, jobRepository)
+	jobHandler := job.NewHandler(api, jobRepository, runner, scheduler)
 
 	api.log = logger
 	api.jobHandler = jobHandler
@@ -55,15 +58,15 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 		srv:           srv,
 		config:        config,
 		appPath:       appPath,
-		scheduler:     cron.New(logger),
-		runner:        runner.New(logger, config),
+		scheduler:     scheduler,
+		runner:        runner,
 		db:            db,
 		jobRepository: jobRepository,
 		jobHandler:    jobHandler,
 	}, nil
 }
 
-func (a *App) startServices() {
+func (a *App) startServices() error {
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
@@ -76,7 +79,12 @@ func (a *App) startServices() {
 		a.scheduler.Start()
 	}()
 
-	for _, j := range a.config.Jobs {
+	jobs, err := a.jobRepository.GetAll()
+	if err != nil {
+		return err
+	}
+
+	for _, j := range jobs {
 		a.scheduleJob(j)
 	}
 
@@ -87,6 +95,8 @@ func (a *App) startServices() {
 			a.log.Printf("HTTP server ListenAndServe: %v", err)
 		}
 	}()
+
+	return nil
 }
 
 func (a *App) stopServices() {

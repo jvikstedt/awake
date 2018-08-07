@@ -4,18 +4,24 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/runner"
 )
 
 type Handler struct {
 	hh            domain.HandlerHelper
 	jobRepository domain.JobRepository
+	runner        *runner.Runner
+	scheduler     *cron.Scheduler
 }
 
-func NewHandler(hh domain.HandlerHelper, jobRepository domain.JobRepository) *Handler {
+func NewHandler(hh domain.HandlerHelper, jobRepository domain.JobRepository, runner *runner.Runner, scheduler *cron.Scheduler) *Handler {
 	return &Handler{
 		hh:            hh,
 		jobRepository: jobRepository,
+		runner:        runner,
+		scheduler:     scheduler,
 	}
 }
 
@@ -60,6 +66,17 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, i
 		return struct{}{}, http.StatusInternalServerError, err
 	}
 
+	// if job.Active {
+	// 	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+	// 		h.runner.AddJob(job)
+	// 	})
+	// } else {
+	// 	h.scheduler.RemoveEntry(cron.EntryID(job.ID))
+	// }
+	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+		h.runner.AddJob(job)
+	})
+
 	return newJob, http.StatusOK, nil
 }
 
@@ -75,6 +92,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) (interface{}, i
 	if err != nil {
 		return struct{}{}, http.StatusInternalServerError, err
 	}
+
+	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+		h.runner.AddJob(job)
+	})
 
 	return newJob, http.StatusOK, nil
 }
