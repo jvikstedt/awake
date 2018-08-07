@@ -85,7 +85,9 @@ func (a *App) startServices() error {
 	}
 
 	for _, j := range jobs {
-		a.scheduleJob(j)
+		if j.Active {
+			a.scheduleJob(j)
+		}
 	}
 
 	a.wg.Add(1)

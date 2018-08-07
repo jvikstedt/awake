@@ -66,16 +66,13 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, i
 		return struct{}{}, http.StatusInternalServerError, err
 	}
 
-	// if job.Active {
-	// 	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
-	// 		h.runner.AddJob(job)
-	// 	})
-	// } else {
-	// 	h.scheduler.RemoveEntry(cron.EntryID(job.ID))
-	// }
-	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
-		h.runner.AddJob(job)
-	})
+	if job.Active {
+		h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+			h.runner.AddJob(job)
+		})
+	} else {
+		h.scheduler.RemoveEntry(cron.EntryID(job.ID))
+	}
 
 	return newJob, http.StatusOK, nil
 }
@@ -93,9 +90,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) (interface{}, i
 		return struct{}{}, http.StatusInternalServerError, err
 	}
 
-	h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
-		h.runner.AddJob(job)
-	})
+	if job.Active {
+		h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
+			h.runner.AddJob(job)
+		})
+	}
 
 	return newJob, http.StatusOK, nil
 }
