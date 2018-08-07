@@ -33,9 +33,6 @@ func (Mailer) Perform(scope awake.Scope) error {
 	}
 
 	if shouldRun {
-		fmt.Println(username)
-		fmt.Println(password)
-
 		auth := smtp.PlainAuth(
 			"",
 			username,
