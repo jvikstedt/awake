@@ -10,15 +10,13 @@ import (
 )
 
 type Handler struct {
-	hh            domain.HandlerHelper
 	jobRepository domain.JobRepository
 	runner        *runner.Runner
 	scheduler     *cron.Scheduler
 }
 
-func NewHandler(hh domain.HandlerHelper, jobRepository domain.JobRepository, runner *runner.Runner, scheduler *cron.Scheduler) *Handler {
+func NewHandler(jobRepository domain.JobRepository, runner *runner.Runner, scheduler *cron.Scheduler) *Handler {
 	return &Handler{
-		hh:            hh,
 		jobRepository: jobRepository,
 		runner:        runner,
 		scheduler:     scheduler,
@@ -34,12 +32,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, i
 	return jobs, http.StatusOK, nil
 }
 
-func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
-	id, err := h.hh.URLParamInt(r, "id")
-	if err != nil {
-		return struct{}{}, http.StatusUnprocessableEntity, err
-	}
-
+func (h *Handler) GetOne(id int, w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	job, err := h.jobRepository.GetOne(id)
 	if err != nil {
 		return struct{}{}, http.StatusInternalServerError, err
@@ -48,12 +41,7 @@ func (h *Handler) GetOne(w http.ResponseWriter, r *http.Request) (interface{}, i
 	return job, http.StatusOK, nil
 }
 
-func (h *Handler) Update(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
-	id, err := h.hh.URLParamInt(r, "id")
-	if err != nil {
-		return struct{}{}, http.StatusUnprocessableEntity, err
-	}
-
+func (h *Handler) Update(id int, w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	decoder := json.NewDecoder(r.Body)
 	job := domain.Job{}
 
@@ -99,12 +87,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) (interface{}, i
 	return newJob, http.StatusOK, nil
 }
 
-func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
-	id, err := h.hh.URLParamInt(r, "id")
-	if err != nil {
-		return struct{}{}, http.StatusUnprocessableEntity, err
-	}
-
+func (h *Handler) Delete(id int, w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	newJob, err := h.jobRepository.Delete(id)
 	if err != nil {
 		return struct{}{}, http.StatusInternalServerError, err

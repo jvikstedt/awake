@@ -11,6 +11,7 @@ import (
 	"github.com/jvikstedt/awake/cron"
 	"github.com/jvikstedt/awake/internal/database"
 	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/handler"
 	"github.com/jvikstedt/awake/internal/job"
 	"github.com/jvikstedt/awake/internal/plugin"
 	"github.com/jvikstedt/awake/internal/runner"
@@ -18,7 +19,6 @@ import (
 
 type App struct {
 	log           *log.Logger
-	port          string
 	srv           *http.Server
 	wg            sync.WaitGroup
 	config        domain.Config
@@ -27,7 +27,6 @@ type App struct {
 	runner        *runner.Runner
 	db            *sqlx.DB
 	jobRepository domain.JobRepository
-	jobHandler    *job.Handler
 }
 
 func newApp(logger *log.Logger, port string, config domain.Config, appPath string) (*App, error) {
@@ -39,22 +38,18 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 		return nil, err
 	}
 
-	api := &Api{}
-
 	runner := runner.New(logger, config)
 	scheduler := cron.New(logger)
 
 	jobRepository := job.NewRepository(db)
-	jobHandler := job.NewHandler(api, jobRepository, runner, scheduler)
+	jobHandler := job.NewHandler(jobRepository, runner, scheduler)
 
-	api.log = logger
-	api.jobHandler = jobHandler
+	api := handler.NewApi(logger, jobHandler)
 
-	srv := &http.Server{Addr: ":" + port, Handler: api.handler()}
+	srv := &http.Server{Addr: ":" + port, Handler: api.Handler()}
 
 	return &App{
 		log:           logger,
-		port:          port,
 		srv:           srv,
 		config:        config,
 		appPath:       appPath,
@@ -62,7 +57,6 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 		runner:        runner,
 		db:            db,
 		jobRepository: jobRepository,
-		jobHandler:    jobHandler,
 	}, nil
 }
 

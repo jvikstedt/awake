@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -19,7 +19,14 @@ type Api struct {
 	jobHandler *job.Handler
 }
 
-func (a *Api) handler() http.Handler {
+func NewApi(log *log.Logger, jobHandler *job.Handler) *Api {
+	return &Api{
+		log:        log,
+		jobHandler: jobHandler,
+	}
+}
+
+func (a *Api) Handler() http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -38,9 +45,9 @@ func (a *Api) handler() http.Handler {
 		r.Route("/jobs", func(r chi.Router) {
 			r.Get("/", a.jsonResponseHandler(a.jobHandler.GetAll))
 			r.Post("/", a.jsonResponseHandler(a.jobHandler.Create))
-			r.Get("/{id}", a.jsonResponseHandler(a.jobHandler.GetOne))
-			r.Put("/{id}", a.jsonResponseHandler(a.jobHandler.Update))
-			r.Delete("/{id}", a.jsonResponseHandler(a.jobHandler.Delete))
+			r.Get("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.GetOne)))
+			r.Put("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.Update)))
+			r.Delete("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.Delete)))
 		})
 	})
 
@@ -62,10 +69,18 @@ func (a *Api) jsonResponseHandler(handleFunc func(http.ResponseWriter, *http.Req
 	}
 }
 
-func (a *Api) URLParamInt(r *http.Request, key string) (int, error) {
-	idStr := chi.URLParam(r, key)
-	if idStr == "" {
-		return 0, fmt.Errorf("URL param %s was empty", key)
+func (a *Api) withID(handleFunc func(int, http.ResponseWriter, *http.Request) (interface{}, int, error)) func(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
+	return func(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
+		idStr := chi.URLParam(r, "id")
+		if idStr == "" {
+			return struct{}{}, http.StatusNotFound, fmt.Errorf("URL param %s was empty", "id")
+		}
+
+		asInt, err := strconv.Atoi(idStr)
+		if err != nil {
+			return struct{}{}, http.StatusUnprocessableEntity, err
+		}
+
+		return handleFunc(asInt, w, r)
 	}
-	return strconv.Atoi(idStr)
 }
