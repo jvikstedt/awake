@@ -31,9 +31,9 @@ func (r *Repository) Update(id int, job domain.Job) (domain.Job, error) {
 		name = ?,
 		active = ?,
 		cron = ?,
-		step_configs = ?,
+		step_config_ids = ?,
 		updated_at = CURRENT_TIMESTAMP
-		WHERE id = ?`, job.Name, job.Active, job.Cron, job.StepConfigs, job.ID)
+		WHERE id = ?`, job.Name, job.Active, job.Cron, job.StepConfigIDs, job.ID)
 	if err != nil {
 		return domain.Job{}, err
 	}
@@ -43,8 +43,8 @@ func (r *Repository) Update(id int, job domain.Job) (domain.Job, error) {
 
 func (r *Repository) Create(job domain.Job) (domain.Job, error) {
 	result, err := r.db.Exec(`INSERT INTO
-		jobs (name, active, cron, step_configs, created_at, updated_at)
-		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, job.Name, job.Active, job.Cron, job.StepConfigs)
+		jobs (name, active, cron, step_config_ids, created_at, updated_at)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, job.Name, job.Active, job.Cron, job.StepConfigIDs)
 	if err != nil {
 		return domain.Job{}, err
 	}

@@ -1,6 +1,8 @@
 package awake
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"reflect"
 )
 
@@ -71,4 +73,25 @@ func ResolveType(i interface{}) Type {
 
 func MakeVariable(i interface{}) Variable {
 	return Variable{Type: ResolveType(i), Val: i}
+}
+
+func (v Variables) Value() (driver.Value, error) {
+	if v != nil {
+		v, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		return string(v), nil
+	}
+	return nil, nil
+}
+
+func (v Variables) Scan(src interface{}) error {
+	var data []byte
+	if b, ok := src.([]byte); ok {
+		data = b
+	} else if v, ok := src.(string); ok {
+		data = []byte(v)
+	}
+	return json.Unmarshal(data, &v)
 }

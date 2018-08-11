@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 
@@ -55,9 +54,10 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
-	t := domain.NewTask(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
-	steps := t.Run()
+	// TODO FIX
+	// t := domain.NewTask(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
+	// steps := t.Run()
 
-	data, _ := json.MarshalIndent(steps, "", "  ")
-	r.log.Printf("%s\n", data)
+	// data, _ := json.MarshalIndent(steps, "", "  ")
+	// r.log.Printf("%s\n", data)
 }

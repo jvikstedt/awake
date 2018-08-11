@@ -1,10 +1,19 @@
 package domain
 
-import "github.com/jvikstedt/awake"
+import (
+	"time"
+
+	"github.com/jvikstedt/awake"
+)
 
 type StepConfig struct {
-	ID              int    `json:"id"`
-	DisplayName     string `json:"displayName"`
-	Tag             `json:"tag"`
-	awake.Variables `json:"variables"`
+	ID        int
+	Tag       Tag
+	Variables awake.Variables
+	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+}
+
+type StepConfigRepository interface {
+	GetOne(int) (StepConfig, error)
+	Create(StepConfig) (StepConfig, error)
 }

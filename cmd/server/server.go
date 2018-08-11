@@ -12,11 +12,13 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/jvikstedt/awake/internal/job"
+	"github.com/jvikstedt/awake/internal/stepconfig"
 )
 
 type Api struct {
-	log        *log.Logger
-	jobHandler *job.Handler
+	log               *log.Logger
+	jobHandler        *job.Handler
+	stepConfigHandler *stepconfig.Handler
 }
 
 func (a *Api) handler() http.Handler {
@@ -41,6 +43,10 @@ func (a *Api) handler() http.Handler {
 			r.Get("/{id}", a.jsonResponseHandler(a.jobHandler.GetOne))
 			r.Put("/{id}", a.jsonResponseHandler(a.jobHandler.Update))
 			r.Delete("/{id}", a.jsonResponseHandler(a.jobHandler.Delete))
+		})
+		r.Route("/step_configs", func(r chi.Router) {
+			r.Post("/", a.jsonResponseHandler(a.stepConfigHandler.Create))
+			r.Get("/{id}", a.jsonResponseHandler(a.stepConfigHandler.GetOne))
 		})
 	})
 

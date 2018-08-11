@@ -6,17 +6,17 @@ import (
 	"time"
 )
 
-type StepConfigs []StepConfig
+type StepConfigIDs []int
 
 type Job struct {
-	ID          int          `json:"id"`
-	Name        string       `json:"name"`
-	Active      bool         `json:"active"`
-	Cron        string       `json:"cron"`
-	StepConfigs *StepConfigs `json:"stepConfigs" db:"step_configs"`
-	CreatedAt   time.Time    `json:"createdAt" db:"created_at" `
-	UpdatedAt   time.Time    `json:"updatedAt" db:"updated_at"`
-	DeletedAt   *time.Time   `json:"deletedAt" db:"deleted_at"`
+	ID            int            `json:"id"`
+	Name          string         `json:"name"`
+	Active        bool           `json:"active"`
+	Cron          string         `json:"cron"`
+	StepConfigIDs *StepConfigIDs `json:"stepConfigIDs" db:"step_config_ids"`
+	CreatedAt     time.Time      `json:"createdAt" db:"created_at"`
+	UpdatedAt     time.Time      `json:"updatedAt" db:"updated_at"`
+	DeletedAt     *time.Time     `json:"deletedAt" db:"deleted_at"`
 }
 
 type JobRepository interface {
@@ -27,7 +27,7 @@ type JobRepository interface {
 	Delete(int) (Job, error)
 }
 
-func (s *StepConfigs) Value() (driver.Value, error) {
+func (s *StepConfigIDs) Value() (driver.Value, error) {
 	if s != nil {
 		s, err := json.Marshal(s)
 		if err != nil {
@@ -38,7 +38,7 @@ func (s *StepConfigs) Value() (driver.Value, error) {
 	return nil, nil
 }
 
-func (s *StepConfigs) Scan(src interface{}) error {
+func (s *StepConfigIDs) Scan(src interface{}) error {
 	var data []byte
 	if b, ok := src.([]byte); ok {
 		data = b

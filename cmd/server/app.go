@@ -14,6 +14,7 @@ import (
 	"github.com/jvikstedt/awake/internal/job"
 	"github.com/jvikstedt/awake/internal/plugin"
 	"github.com/jvikstedt/awake/internal/runner"
+	"github.com/jvikstedt/awake/internal/stepconfig"
 )
 
 type App struct {
@@ -47,8 +48,12 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 	jobRepository := job.NewRepository(db)
 	jobHandler := job.NewHandler(api, jobRepository, runner, scheduler)
 
+	stepConfigRepository := stepconfig.NewRepository(db)
+	stepConfigHandler := stepconfig.NewHandler(api, stepConfigRepository)
+
 	api.log = logger
 	api.jobHandler = jobHandler
+	api.stepConfigHandler = stepConfigHandler
 
 	srv := &http.Server{Addr: ":" + port, Handler: api.handler()}
 
