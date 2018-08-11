@@ -7,10 +7,10 @@ import (
 )
 
 type StepConfig struct {
-	ID        int
-	Tag       Tag
-	Variables awake.Variables
-	CreatedAt time.Time `json:"createdAt" db:"created_at"`
+	ID        int             `json:"id"`
+	Tag       Tag             `json:"tag"`
+	Variables awake.Variables `json:"variables"`
+	CreatedAt time.Time       `json:"createdAt" db:"created_at"`
 }
 
 type StepConfigRepository interface {
