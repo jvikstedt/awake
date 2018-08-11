@@ -5,13 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"plugin"
-
-	"github.com/jvikstedt/awake/internal/domain"
 )
 
 // PluginPerformers loads all plugins in target folderPath and
 // converts them to performer and calls callback fn with each of them
-func PluginPerformers(folderPath string, fn func(domain.Performer, error)) error {
+func PluginPerformers(folderPath string, fn func(Performer, error)) error {
 	files, err := findFiles(folderPath)
 	if err != nil {
 		return err
@@ -27,7 +25,7 @@ func PluginPerformers(folderPath string, fn func(domain.Performer, error)) error
 			fn(nil, err)
 		}
 
-		performer, ok := s.(domain.Performer)
+		performer, ok := s.(Performer)
 		if !ok {
 			fn(nil, fmt.Errorf("Could not convert to Performer"))
 		}

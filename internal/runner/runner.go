@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/plugin"
 )
 
 type Runner struct {
@@ -60,7 +61,7 @@ func (r *Runner) handleJob(job domain.Job) {
 	for i, v := range scope.steps {
 		scope.current = i
 
-		performer, ok := domain.FindPerformer(v.Conf.Tag)
+		performer, ok := plugin.FindPerformer(v.Conf.Tag)
 		if !ok {
 			v.Err = fmt.Errorf("argh... performer not found %s", v.Conf.Tag)
 			v.ErrMsg = v.Err.Error()

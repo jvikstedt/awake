@@ -125,15 +125,15 @@ func (a *App) scheduleJob(job domain.Job) {
 func (a *App) registerPerformers() {
 	for _, p := range plugin.BuiltinPerformers() {
 		a.log.Printf("Registering builtin performer %s\n", p.Info().Name)
-		domain.RegisterPerformer(p)
+		plugin.RegisterPerformer(p)
 	}
 
-	plugin.PluginPerformers(filepath.Join(a.appPath, "plugins"), func(performer domain.Performer, err error) {
+	plugin.PluginPerformers(filepath.Join(a.appPath, "plugins"), func(performer plugin.Performer, err error) {
 		a.log.Printf("Registering plugin performer %s\n", performer.Info().Name)
 		if err != nil {
 			a.log.Println(err)
 			return
 		}
-		domain.RegisterPerformer(performer)
+		plugin.RegisterPerformer(performer)
 	})
 }

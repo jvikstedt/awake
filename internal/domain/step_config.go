@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 
 	"github.com/jvikstedt/awake"
+	"github.com/jvikstedt/awake/internal/plugin"
 )
 
 type StepConfig struct {
 	ID              int    `json:"id"`
 	DisplayName     string `json:"displayName"`
-	Tag             `json:"tag"`
+	plugin.Tag      `json:"tag"`
 	awake.Variables `json:"variables"`
 }
 

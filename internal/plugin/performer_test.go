@@ -1,10 +1,10 @@
-package domain_test
+package plugin_test
 
 import (
 	"testing"
 
 	"github.com/jvikstedt/awake"
-	"github.com/jvikstedt/awake/internal/domain"
+	"github.com/jvikstedt/awake/internal/plugin"
 )
 
 type testPerformer struct {
@@ -19,17 +19,17 @@ func (tp testPerformer) Perform(awake.Scope) error { return nil }
 
 func TestRegisterPerformer(t *testing.T) {
 	tt := []struct {
-		tag domain.Tag
+		tag string
 	}{
 		{tag: "HTTP"},
 		{tag: "EQUAL"},
 	}
 
 	for _, v := range tt {
-		t.Run(string(v.tag), func(t *testing.T) {
-			tp := testPerformer{Name: string(v.tag)}
-			domain.RegisterPerformer(tp)
-			rp, ok := domain.FindPerformer(v.tag)
+		t.Run(v.tag, func(t *testing.T) {
+			tp := testPerformer{Name: v.tag}
+			plugin.RegisterPerformer(tp)
+			rp, ok := plugin.FindPerformer(plugin.Tag(v.tag))
 			if !ok {
 				t.Fatalf("Could not find performer by tag %s", v.tag)
 			}
@@ -41,7 +41,7 @@ func TestRegisterPerformer(t *testing.T) {
 	}
 
 	t.Run("NOT_FOUND", func(t *testing.T) {
-		rp, ok := domain.FindPerformer("FOO")
+		rp, ok := plugin.FindPerformer("FOO")
 		if ok {
 			t.Fatalf("Expected not ok but was ok")
 		}

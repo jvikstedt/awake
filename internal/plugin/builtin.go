@@ -1,12 +1,11 @@
 package plugin
 
 import (
-	"github.com/jvikstedt/awake/internal/domain"
 	"github.com/jvikstedt/awake/internal/plugin/builtin"
 )
 
-func BuiltinPerformers() []domain.Performer {
-	performers := []domain.Performer{
+func BuiltinPerformers() []Performer {
+	performers := []Performer{
 		builtin.Equal{},
 		builtin.HTTP{},
 		builtin.JSON{},
