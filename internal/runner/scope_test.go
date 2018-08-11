@@ -1,4 +1,4 @@
-package domain
+package runner
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/jvikstedt/awake"
+	"github.com/jvikstedt/awake/internal/domain"
 )
 
 var logs = &bytes.Buffer{}
@@ -50,14 +51,14 @@ func TestValueAsRaw(t *testing.T) {
 		},
 	}
 
-	stepConfigs := []StepConfig{
+	stepConfigs := []domain.StepConfig{
 		{Tag: "FOO", Variables: variables},
 	}
 
-	task := NewTask(logger, PerformerConfigs{}, stepConfigs)
+	scope := newScope(logger, domain.PerformerConfigs{}, stepConfigs)
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
-			val, ok := task.ValueAsRaw(tc.name)
+			val, ok := scope.ValueAsRaw(tc.name)
 			if ok != tc.ok {
 				t.Fatalf("Expected %v to eq %v", ok, tc.ok)
 			}
@@ -81,7 +82,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 		{tname: "missing", name: "foo", val: nil, ok: false},
 	}
 
-	steps := []StepConfig{
+	steps := []domain.StepConfig{
 		{Tag: "HTTP", Variables: awake.Variables{}},
 		{
 			Tag: "ASSERT",
@@ -102,17 +103,17 @@ func TestValueAsRawDynamic(t *testing.T) {
 		},
 	}
 
-	task := NewTask(logger, PerformerConfigs{}, steps)
-	task.current = 1
+	scope := newScope(logger, domain.PerformerConfigs{}, steps)
+	scope.current = 1
 
-	task.steps[0].Result.Variables["token"] = awake.Variable{Type: awake.TypeString, Val: "abc123"}
-	task.steps[0].Result.Variables["code"] = awake.Variable{Type: awake.TypeInt, Val: 200}
-	task.steps[0].Result.Variables["username"] = awake.Variable{Type: awake.TypeString, Val: "foo"}
-	task.steps[0].Result.Variables["password"] = awake.Variable{Type: awake.TypeString, Val: "bar"}
+	scope.steps[0].Result.Variables["token"] = awake.Variable{Type: awake.TypeString, Val: "abc123"}
+	scope.steps[0].Result.Variables["code"] = awake.Variable{Type: awake.TypeInt, Val: 200}
+	scope.steps[0].Result.Variables["username"] = awake.Variable{Type: awake.TypeString, Val: "foo"}
+	scope.steps[0].Result.Variables["password"] = awake.Variable{Type: awake.TypeString, Val: "bar"}
 
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
-			val, ok := task.ValueAsRaw(tc.name)
+			val, ok := scope.ValueAsRaw(tc.name)
 			if ok != tc.ok {
 				t.Fatalf("Expected %v to eq %v", ok, tc.ok)
 			}

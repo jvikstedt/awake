@@ -1,7 +1,7 @@
 package runner
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 
@@ -55,9 +55,22 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
-	t := domain.NewTask(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
-	steps := t.Run()
+	scope := newScope(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
 
-	data, _ := json.MarshalIndent(steps, "", "  ")
-	r.log.Printf("%s\n", data)
+	for i, v := range scope.steps {
+		scope.current = i
+
+		performer, ok := domain.FindPerformer(v.Conf.Tag)
+		if !ok {
+			v.Err = fmt.Errorf("argh... performer not found %s", v.Conf.Tag)
+			v.ErrMsg = v.Err.Error()
+			continue
+		}
+
+		if v.Err = performer.Perform(scope); v.Err != nil {
+			v.ErrMsg = v.Err.Error()
+		}
+	}
+
+	r.log.Printf("Job %d execution done\n", job.ID)
 }
