@@ -16,14 +16,14 @@ var dynamicRegexp = regexp.MustCompile(`\${[^}]*}`)
 type scope struct {
 	log     *log.Logger
 	current int
-	steps   []*Step
+	steps   []*domain.Step
 }
 
 func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfigs []domain.StepConfig) *scope {
-	steps := make([]*Step, len(stepConfigs))
+	steps := make([]*domain.Step, len(stepConfigs))
 
 	for i, stepConfig := range stepConfigs {
-		steps[i] = &Step{
+		steps[i] = &domain.Step{
 			Conf: stepConfig,
 			Result: domain.StepResult{
 				Variables: awake.Variables{},
@@ -47,7 +47,7 @@ func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfi
 	}
 }
 
-func (s *scope) currentStep() *Step {
+func (s *scope) currentStep() *domain.Step {
 	return s.steps[s.current]
 }
 
