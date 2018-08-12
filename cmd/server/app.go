@@ -14,19 +14,21 @@ import (
 	"github.com/jvikstedt/awake/internal/handler"
 	"github.com/jvikstedt/awake/internal/job"
 	"github.com/jvikstedt/awake/internal/plugin"
+	"github.com/jvikstedt/awake/internal/result"
 	"github.com/jvikstedt/awake/internal/runner"
 )
 
 type App struct {
-	log           *log.Logger
-	srv           *http.Server
-	wg            sync.WaitGroup
-	config        domain.Config
-	appPath       string
-	scheduler     *cron.Scheduler
-	runner        *runner.Runner
-	db            *sqlx.DB
-	jobRepository domain.JobRepository
+	log              *log.Logger
+	srv              *http.Server
+	wg               sync.WaitGroup
+	config           domain.Config
+	appPath          string
+	scheduler        *cron.Scheduler
+	runner           *runner.Runner
+	db               *sqlx.DB
+	jobRepository    domain.JobRepository
+	resultRepository domain.ResultRepository
 }
 
 func newApp(logger *log.Logger, port string, config domain.Config, appPath string) (*App, error) {
@@ -41,22 +43,26 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 	runner := runner.New(logger, config)
 	scheduler := cron.New(logger)
 
+	resultRepository := result.NewRepository(db)
+	resultHandler := result.NewHandler(resultRepository)
+
 	jobRepository := job.NewRepository(db)
 	jobHandler := job.NewHandler(jobRepository, runner, scheduler)
 
-	api := handler.NewApi(logger, jobHandler)
+	api := handler.NewApi(logger, jobHandler, resultHandler)
 
 	srv := &http.Server{Addr: ":" + port, Handler: api.Handler()}
 
 	return &App{
-		log:           logger,
-		srv:           srv,
-		config:        config,
-		appPath:       appPath,
-		scheduler:     scheduler,
-		runner:        runner,
-		db:            db,
-		jobRepository: jobRepository,
+		log:              logger,
+		srv:              srv,
+		config:           config,
+		appPath:          appPath,
+		scheduler:        scheduler,
+		runner:           runner,
+		db:               db,
+		jobRepository:    jobRepository,
+		resultRepository: resultRepository,
 	}, nil
 }
 

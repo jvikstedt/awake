@@ -9,8 +9,6 @@ import (
 )
 
 type StepConfig struct {
-	ID              int    `json:"id"`
-	DisplayName     string `json:"displayName"`
 	plugin.Tag      `json:"tag"`
 	awake.Variables `json:"variables"`
 }

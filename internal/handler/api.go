@@ -12,17 +12,20 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/jvikstedt/awake/internal/job"
+	"github.com/jvikstedt/awake/internal/result"
 )
 
 type Api struct {
-	log        *log.Logger
-	jobHandler *job.Handler
+	log           *log.Logger
+	jobHandler    *job.Handler
+	resultHandler *result.Handler
 }
 
-func NewApi(log *log.Logger, jobHandler *job.Handler) *Api {
+func NewApi(log *log.Logger, jobHandler *job.Handler, resultHandler *result.Handler) *Api {
 	return &Api{
-		log:        log,
-		jobHandler: jobHandler,
+		log:           log,
+		jobHandler:    jobHandler,
+		resultHandler: resultHandler,
 	}
 }
 
@@ -48,6 +51,10 @@ func (a *Api) Handler() http.Handler {
 			r.Get("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.GetOne)))
 			r.Put("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.Update)))
 			r.Delete("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.Delete)))
+		})
+		r.Route("/results", func(r chi.Router) {
+			r.Post("/", a.jsonResponseHandler(a.resultHandler.Create))
+			r.Get("/{id}", a.jsonResponseHandler(a.withID(a.resultHandler.GetOne)))
 		})
 	})
 
