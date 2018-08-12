@@ -40,11 +40,11 @@ func newApp(logger *log.Logger, port string, config domain.Config, appPath strin
 		return nil, err
 	}
 
-	runner := runner.New(logger, config)
-	scheduler := cron.New(logger)
-
 	resultRepository := result.NewRepository(db)
 	resultHandler := result.NewHandler(resultRepository)
+
+	runner := runner.New(logger, config, resultRepository)
+	scheduler := cron.New(logger)
 
 	jobRepository := job.NewRepository(db)
 	jobHandler := job.NewHandler(jobRepository, runner, scheduler)

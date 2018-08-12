@@ -10,18 +10,20 @@ import (
 )
 
 type Runner struct {
-	jobs chan domain.Job
-	quit chan struct{}
-	log  *log.Logger
-	conf domain.Config
+	jobs             chan domain.Job
+	quit             chan struct{}
+	log              *log.Logger
+	conf             domain.Config
+	resultRepository domain.ResultRepository
 }
 
-func New(logger *log.Logger, conf domain.Config) *Runner {
+func New(logger *log.Logger, conf domain.Config, resultRepository domain.ResultRepository) *Runner {
 	return &Runner{
-		jobs: make(chan domain.Job, 100),
-		quit: make(chan struct{}),
-		log:  logger,
-		conf: conf,
+		jobs:             make(chan domain.Job, 100),
+		quit:             make(chan struct{}),
+		log:              logger,
+		conf:             conf,
+		resultRepository: resultRepository,
 	}
 }
 
@@ -56,6 +58,7 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
+	r.log.Printf("Running job %d\n", job.ID)
 	scope := newScope(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
 
 	for i, v := range scope.steps {
@@ -71,6 +74,16 @@ func (r *Runner) handleJob(job domain.Job) {
 		if v.Err = performer.Perform(scope); v.Err != nil {
 			v.ErrMsg = v.Err.Error()
 		}
+	}
+
+	result := domain.Result{
+		JobID: job.ID,
+		Steps: &scope.steps,
+	}
+
+	_, err := r.resultRepository.Create(result)
+	if err != nil {
+		r.log.Println(err)
 	}
 
 	r.log.Printf("Job %d execution done\n", job.ID)
