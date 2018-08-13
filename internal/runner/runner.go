@@ -62,18 +62,8 @@ func (r *Runner) handleJob(job domain.Job) {
 	r.log.Printf("Running job %d\n", job.ID)
 	scope := newScope(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
 
-	for i, v := range scope.steps {
-		scope.current = i
-
-		performer, ok := plugin.FindPerformer(v.Conf.Tag)
-		if !ok {
-			scope.addAlert(awake.Alert{Type: awake.AlertError, Value: fmt.Sprintf("argh... performer not found %s", v.Conf.Tag)})
-			continue
-		}
-
-		if err := performer.Perform(scope); err != nil {
-			scope.addAlert(awake.Alert{Type: awake.AlertError, Value: err.Error()})
-		}
+	for i, _ := range scope.steps {
+		r.performStep(i, scope)
 	}
 
 	result := domain.Result{
@@ -87,4 +77,25 @@ func (r *Runner) handleJob(job domain.Job) {
 	}
 
 	r.log.Printf("Job %d execution done\n", job.ID)
+}
+
+func (r *Runner) performStep(index int, s *scope) {
+	defer func() {
+		if r := recover(); r != nil {
+			s.addAlert(awake.Alert{Type: awake.AlertError, Value: fmt.Sprintf("Entry with id of %d failed due to: %v", s.current, r)})
+		}
+	}()
+
+	s.current = index
+	step := s.currentStep()
+
+	performer, ok := plugin.FindPerformer(step.Conf.Tag)
+	if !ok {
+		s.addAlert(awake.Alert{Type: awake.AlertError, Value: fmt.Sprintf("argh... performer not found %s", step.Conf.Tag)})
+		return
+	}
+
+	if err := performer.Perform(s); err != nil {
+		s.addAlert(awake.Alert{Type: awake.AlertError, Value: err.Error()})
+	}
 }
