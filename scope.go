@@ -40,7 +40,7 @@ type Scope interface {
 	ValueAsBool(name string) (bool, bool)
 	SetReturnVariable(name string, variable Variable)
 	Variables() Variables
-	Errors() []error
+	Alerts() Alerts
 }
 
 func ResolveType(i interface{}) Type {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/internal/domain"
 	"github.com/jvikstedt/awake/internal/plugin"
 )
@@ -66,13 +67,12 @@ func (r *Runner) handleJob(job domain.Job) {
 
 		performer, ok := plugin.FindPerformer(v.Conf.Tag)
 		if !ok {
-			v.Err = fmt.Errorf("argh... performer not found %s", v.Conf.Tag)
-			v.ErrMsg = v.Err.Error()
+			scope.addAlert(awake.Alert{Type: awake.AlertError, Value: fmt.Sprintf("argh... performer not found %s", v.Conf.Tag)})
 			continue
 		}
 
-		if v.Err = performer.Perform(scope); v.Err != nil {
-			v.ErrMsg = v.Err.Error()
+		if err := performer.Perform(scope); err != nil {
+			scope.addAlert(awake.Alert{Type: awake.AlertError, Value: err.Error()})
 		}
 	}
 

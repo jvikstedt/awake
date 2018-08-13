@@ -28,6 +28,7 @@ func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfi
 			Result: domain.StepResult{
 				Variables: awake.Variables{},
 			},
+			Alerts: awake.Alerts{},
 		}
 
 		conf, ok := performerConfigs[steps[i].Conf.Tag]
@@ -62,21 +63,23 @@ func (s *scope) getValue(v awake.Variable) (interface{}, error) {
 	}
 }
 
+func (s *scope) addAlert(alert awake.Alert) {
+	s.steps[s.current].Alerts = append(s.currentStep().Alerts, alert)
+}
+
 // Implements awake.Scope
 
 func (s *scope) SetReturnVariable(name string, variable awake.Variable) {
 	s.currentStep().Result.Variables[name] = variable
 }
 
-func (s *scope) Errors() []error {
-	errors := []error{}
+func (s *scope) Alerts() awake.Alerts {
+	alerts := awake.Alerts{}
 	for i := 0; i < s.current; i++ {
-		if s.steps[i].Err != nil {
-			errors = append(errors, s.steps[i].Err)
-		}
+		alerts = append(alerts, s.steps[i].Alerts...)
 	}
 
-	return errors
+	return alerts
 }
 
 func (s *scope) Variables() awake.Variables {
@@ -102,13 +105,13 @@ func (s *scope) ValueAsRaw(name string) (interface{}, bool) {
 
 	v, ok := currentStepPair.Conf.Variables[name]
 	if !ok {
-		s.log.Printf("Could not find variable by name: %s\n", name)
+		s.addAlert(awake.Alert{Type: awake.AlertWarning, Value: fmt.Sprintf("Could not find variable by name: %s\n", name)})
 		return nil, ok
 	}
 
 	val, err := s.getValue(v)
 	if err != nil {
-		s.log.Println(err)
+		s.addAlert(awake.Alert{Type: awake.AlertWarning, Value: err.Error()})
 		return nil, false
 	}
 

@@ -3,13 +3,14 @@ package domain
 import (
 	"database/sql/driver"
 	"encoding/json"
+
+	"github.com/jvikstedt/awake"
 )
 
 type Step struct {
-	Conf   StepConfig `json:"conf"`
-	Result StepResult `json:"result"`
-	Err    error      `json:"err"`
-	ErrMsg string     `json:"errMsg"`
+	Conf   StepConfig   `json:"conf"`
+	Result StepResult   `json:"result"`
+	Alerts awake.Alerts `json:"alerts"`
 }
 
 type Steps []Step

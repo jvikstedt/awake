@@ -4,27 +4,33 @@ import (
 	"github.com/jvikstedt/awake"
 )
 
-type Errors struct{}
+type Alerts struct{}
 
-func (Errors) Info() awake.PerformerInfo {
+func (Alerts) Info() awake.PerformerInfo {
 	return awake.PerformerInfo{
-		Name:        "builtin_errors",
-		DisplayName: "Error count",
+		Name:        "builtin_alerts",
+		DisplayName: "Alert count",
 	}
 }
 
-func (Errors) Perform(scope awake.Scope) error {
-	errors := scope.Errors()
+func (Alerts) Perform(scope awake.Scope) error {
+	alerts := scope.Alerts()
 
-	scope.SetReturnVariable("count", awake.Variable{Type: awake.TypeInt, Val: len(errors)})
+	errors := alerts.ByType(awake.AlertError)
+	warnings := alerts.ByType(awake.AlertWarning)
+
+	scope.SetReturnVariable("errorCount", awake.Variable{Type: awake.TypeInt, Val: len(errors)})
 	scope.SetReturnVariable("hasErrors", awake.Variable{Type: awake.TypeBool, Val: len(errors) > 0})
 
-	errStr := ""
-	for _, e := range errors {
-		errStr += e.Error() + "\n"
+	scope.SetReturnVariable("warningCount", awake.Variable{Type: awake.TypeInt, Val: len(warnings)})
+	scope.SetReturnVariable("hasWarnings", awake.Variable{Type: awake.TypeBool, Val: len(warnings) > 0})
+
+	alertStr := ""
+	for _, a := range alerts {
+		alertStr += a.Value + "\n"
 	}
 
-	scope.SetReturnVariable("errors", awake.Variable{Type: awake.TypeString, Val: errStr})
+	scope.SetReturnVariable("alerts", awake.Variable{Type: awake.TypeString, Val: alertStr})
 
 	return nil
 }
