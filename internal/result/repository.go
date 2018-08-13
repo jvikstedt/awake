@@ -15,6 +15,12 @@ func NewRepository(db *sqlx.DB) *Repository {
 	}
 }
 
+func (r *Repository) GetAll() ([]domain.Result, error) {
+	results := []domain.Result{}
+	err := sqlx.Select(r.db, &results, `SELECT * FROM results WHERE results.deleted_at IS NULL ORDER BY created_at desc limit 10`)
+	return results, err
+}
+
 func (r *Repository) GetOne(id int) (domain.Result, error) {
 	result := domain.Result{}
 	return result, sqlx.Get(r.db, &result, "SELECT results.* FROM results WHERE id=$1", id)

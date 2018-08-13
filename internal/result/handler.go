@@ -17,6 +17,15 @@ func NewHandler(resultRepository domain.ResultRepository) *Handler {
 	}
 }
 
+func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
+	results, err := h.resultRepository.GetAll()
+	if err != nil {
+		return struct{}{}, http.StatusInternalServerError, err
+	}
+
+	return results, http.StatusOK, nil
+}
+
 func (h *Handler) GetOne(id int, w http.ResponseWriter, r *http.Request) (interface{}, int, error) {
 	result, err := h.resultRepository.GetOne(id)
 	if err != nil {

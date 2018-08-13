@@ -12,6 +12,7 @@ type Result struct {
 }
 
 type ResultRepository interface {
+	GetAll() ([]Result, error)
 	GetOne(int) (Result, error)
 	Create(Result) (Result, error)
 }

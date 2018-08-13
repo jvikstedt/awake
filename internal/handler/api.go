@@ -53,6 +53,7 @@ func (a *Api) Handler() http.Handler {
 			r.Delete("/{id}", a.jsonResponseHandler(a.withID(a.jobHandler.Delete)))
 		})
 		r.Route("/results", func(r chi.Router) {
+			r.Get("/", a.jsonResponseHandler(a.resultHandler.GetAll))
 			r.Post("/", a.jsonResponseHandler(a.resultHandler.Create))
 			r.Get("/{id}", a.jsonResponseHandler(a.withID(a.resultHandler.GetOne)))
 		})
