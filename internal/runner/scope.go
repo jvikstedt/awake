@@ -182,6 +182,12 @@ func (s *scope) handleInt(val interface{}) (int, error) {
 	}
 }
 
+var functions = map[string]govaluate.ExpressionFunction{
+	"floatToInt": func(args ...interface{}) (interface{}, error) {
+		return (int)(args[0].(float64)), nil
+	},
+}
+
 func (s *scope) handleDynamic(val interface{}) (interface{}, error) {
 	vars := map[string]interface{}{}
 	for i, step := range s.steps {
@@ -195,7 +201,7 @@ func (s *scope) handleDynamic(val interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("Expected %v to be string but got %T", val, val)
 	}
 
-	expression, err := govaluate.NewEvaluableExpression(asStr)
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(asStr, functions)
 	if err != nil {
 		return nil, err
 	}
