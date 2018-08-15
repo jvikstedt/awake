@@ -20,7 +20,7 @@ func (Equal) Perform(scope awake.Scope) error {
 	expected, _ := scope.ValueAsRaw("expected")
 
 	if actual != expected {
-		return fmt.Errorf("Expected to be %v but got %v", expected, actual)
+		return fmt.Errorf("Expected to be %v %T but got %v %T", expected, expected, actual, actual)
 	}
 
 	return nil
