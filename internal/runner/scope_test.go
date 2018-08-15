@@ -76,7 +76,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 		val   interface{}
 		ok    bool
 	}{
-		{tname: "int variable", name: "code", val: 200, ok: true},
+		{tname: "int variable", name: "code", val: 200.0, ok: true},
 		{tname: "one variable in string", name: "header", val: "authorization: Bearer abc123", ok: true},
 		{tname: "two variable in string", name: "credentials", val: `{"username":"foo","password":"bar"}`, ok: true},
 		{tname: "missing", name: "foo", val: nil, ok: false},
@@ -89,15 +89,15 @@ func TestValueAsRawDynamic(t *testing.T) {
 			Variables: awake.Variables{
 				"header": awake.Variable{
 					Type: awake.TypeDynamic,
-					Val:  "authorization: Bearer ${0:token}",
+					Val:  "'authorization: Bearer ' + [0-token]",
 				},
 				"code": awake.Variable{
 					Type: awake.TypeDynamic,
-					Val:  "${0:code}",
+					Val:  "[0-code]",
 				},
 				"credentials": awake.Variable{
 					Type: awake.TypeDynamic,
-					Val:  `{"username":"${0:username}","password":"${0:password}"}`,
+					Val:  `'{\"username\":\"' + [0-username] + '\",\"password\":\"' + [0-password] + '\"}'`,
 				},
 			},
 		},
@@ -107,7 +107,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 	scope.current = 1
 
 	scope.steps[0].Result.Variables["token"] = awake.Variable{Type: awake.TypeString, Val: "abc123"}
-	scope.steps[0].Result.Variables["code"] = awake.Variable{Type: awake.TypeInt, Val: 200}
+	scope.steps[0].Result.Variables["code"] = awake.Variable{Type: awake.TypeInt, Val: 200.0}
 	scope.steps[0].Result.Variables["username"] = awake.Variable{Type: awake.TypeString, Val: "foo"}
 	scope.steps[0].Result.Variables["password"] = awake.Variable{Type: awake.TypeString, Val: "bar"}
 
