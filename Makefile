@@ -1,4 +1,2 @@
-build-386:
-	export GOOS=linux; \
-	export GOARCH=386; \
-	CGO_ENABLED=1 go build -o "./bin/${GOOS}_${GOARCH}/awake" cmd/server/*
+build-linux-386:
+	CGO_ENABLED=1 GOOS=linux GOARCH=386 go build -o ./bin/linux_386/awake cmd/server/*
