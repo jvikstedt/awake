@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
-	"strings"
 
+	"github.com/Knetic/govaluate"
 	"github.com/jvikstedt/awake"
 	"github.com/jvikstedt/awake/internal/domain"
 )
@@ -184,33 +183,22 @@ func (s *scope) handleInt(val interface{}) (int, error) {
 }
 
 func (s *scope) handleDynamic(val interface{}) (interface{}, error) {
+	vars := map[string]interface{}{}
+	for i, step := range s.steps {
+		for key, v := range step.Result.Variables {
+			vars[fmt.Sprintf("%d-%s", i, key)] = v.Val
+		}
+	}
+
 	asStr, ok := val.(string)
 	if !ok {
 		return nil, fmt.Errorf("Expected %v to be string but got %T", val, val)
 	}
 
-	matches := dynamicRegexp.FindAllString(asStr, -1)
-
-	if len(matches) == 1 && len(matches[0]) == len(asStr) {
-		str := strings.Split(matches[0][2:len(matches[0])-1], ":")
-		i, err := strconv.Atoi(str[0])
-		if err != nil {
-			return nil, err
-		}
-		return s.steps[i].Result.Variables[str[1]].Val, nil
+	expression, err := govaluate.NewEvaluableExpression(asStr)
+	if err != nil {
+		return nil, err
 	}
 
-	compiled := asStr
-
-	for _, m := range matches {
-		str := strings.Split(m[2:len(m)-1], ":")
-		i, err := strconv.Atoi(str[0])
-		if err != nil {
-			return nil, err
-		}
-		scopeValAsStr := fmt.Sprintf("%v", s.steps[i].Result.Variables[str[1]].Val)
-		compiled = strings.Replace(compiled, m, scopeValAsStr, -1)
-	}
-
-	return compiled, nil
+	return expression.Evaluate(vars)
 }
