@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 
 	"github.com/Knetic/govaluate"
 	"github.com/jvikstedt/awake"
@@ -183,8 +184,33 @@ func (s *scope) handleInt(val interface{}) (int, error) {
 }
 
 var functions = map[string]govaluate.ExpressionFunction{
-	"floatToInt": func(args ...interface{}) (interface{}, error) {
-		return (int)(args[0].(float64)), nil
+	"toInt": func(args ...interface{}) (interface{}, error) {
+		val := args[0]
+
+		switch v := val.(type) {
+		case int:
+			return v, nil
+		case float64:
+			return int(v), nil
+		case string:
+			return strconv.Atoi(v)
+		default:
+			return val, fmt.Errorf("Expected %v to be either int, string or float64, but was %T", val, val)
+		}
+	},
+	"toFloat": func(args ...interface{}) (interface{}, error) {
+		val := args[0]
+
+		switch v := val.(type) {
+		case int:
+			return float64(v), nil
+		case float64:
+			return v, nil
+		case string:
+			return strconv.ParseFloat(v, 64)
+		default:
+			return val, fmt.Errorf("Expected %v to be either int or float64, but was %T", val, val)
+		}
 	},
 }
 
