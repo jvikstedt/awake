@@ -61,6 +61,12 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) handleJob(job domain.Job) {
+	job, err := r.jobRepository.GetOne(job.ID)
+	if err != nil {
+		r.log.Println(err)
+		return
+	}
+
 	r.log.Printf("Running job %d\n", job.ID)
 	storage := domain.Storage{}
 	if job.Storage != nil {
@@ -77,7 +83,7 @@ func (r *Runner) handleJob(job domain.Job) {
 		Steps: &scope.steps,
 	}
 
-	_, err := r.resultRepository.Create(result)
+	_, err = r.resultRepository.Create(result)
 	if err != nil {
 		r.log.Println(err)
 	}
