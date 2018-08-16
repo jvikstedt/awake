@@ -15,6 +15,7 @@ func BuiltinPerformers() []Performer {
 		builtin.Template{},
 		builtin.Mailer{},
 		builtin.Alerts{},
+		builtin.SetStorageVal{},
 	}
 
 	return performers

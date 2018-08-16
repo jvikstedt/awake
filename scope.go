@@ -39,6 +39,7 @@ type Scope interface {
 	ValueAsFloat(name string) (float64, bool)
 	ValueAsBool(name string) (bool, bool)
 	SetReturnVariable(name string, variable Variable)
+	SetStorageVariable(name string, variable Variable)
 	Variables() Variables
 	Alerts() Alerts
 }

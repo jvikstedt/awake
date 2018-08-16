@@ -17,9 +17,10 @@ type scope struct {
 	log     *log.Logger
 	current int
 	steps   domain.Steps
+	storage domain.Storage
 }
 
-func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfigs []domain.StepConfig) *scope {
+func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfigs []domain.StepConfig, storage domain.Storage) *scope {
 	steps := make(domain.Steps, len(stepConfigs))
 
 	for i, stepConfig := range stepConfigs {
@@ -45,6 +46,7 @@ func newScope(l *log.Logger, performerConfigs domain.PerformerConfigs, stepConfi
 		log:     l,
 		current: 0,
 		steps:   steps,
+		storage: storage,
 	}
 }
 
@@ -71,6 +73,10 @@ func (s *scope) addAlert(alert awake.Alert) {
 
 func (s *scope) SetReturnVariable(name string, variable awake.Variable) {
 	s.currentStep().Result.Variables[name] = variable
+}
+
+func (s *scope) SetStorageVariable(name string, variable awake.Variable) {
+	s.storage[name] = variable
 }
 
 func (s *scope) Alerts() awake.Alerts {
@@ -220,6 +226,10 @@ func (s *scope) handleDynamic(val interface{}) (interface{}, error) {
 		for key, v := range step.Result.Variables {
 			vars[fmt.Sprintf("%d-%s", i, key)] = v.Val
 		}
+	}
+
+	for key, val := range s.storage {
+		vars[fmt.Sprintf("storage-%s", key)] = val.Val
 	}
 
 	asStr, ok := val.(string)

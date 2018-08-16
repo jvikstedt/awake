@@ -16,15 +16,17 @@ type Runner struct {
 	log              *log.Logger
 	conf             domain.Config
 	resultRepository domain.ResultRepository
+	jobRepository    domain.JobRepository
 }
 
-func New(logger *log.Logger, conf domain.Config, resultRepository domain.ResultRepository) *Runner {
+func New(logger *log.Logger, conf domain.Config, resultRepository domain.ResultRepository, jobRepository domain.JobRepository) *Runner {
 	return &Runner{
 		jobs:             make(chan domain.Job, 100),
 		quit:             make(chan struct{}),
 		log:              logger,
 		conf:             conf,
 		resultRepository: resultRepository,
+		jobRepository:    jobRepository,
 	}
 }
 
@@ -60,9 +62,13 @@ func (r *Runner) Stop() {
 
 func (r *Runner) handleJob(job domain.Job) {
 	r.log.Printf("Running job %d\n", job.ID)
-	scope := newScope(r.log, r.conf.PerformerConfigs, *job.StepConfigs)
+	storage := domain.Storage{}
+	if job.Storage != nil {
+		storage = *job.Storage
+	}
+	scope := newScope(r.log, r.conf.PerformerConfigs, *job.StepConfigs, storage)
 
-	for i, _ := range scope.steps {
+	for i := range scope.steps {
 		r.performStep(i, scope)
 	}
 
@@ -72,6 +78,12 @@ func (r *Runner) handleJob(job domain.Job) {
 	}
 
 	_, err := r.resultRepository.Create(result)
+	if err != nil {
+		r.log.Println(err)
+	}
+
+	job.Storage = &scope.storage
+	_, err = r.jobRepository.Update(job.ID, job)
 	if err != nil {
 		r.log.Println(err)
 	}

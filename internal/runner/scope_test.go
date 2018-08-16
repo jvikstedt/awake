@@ -55,7 +55,7 @@ func TestValueAsRaw(t *testing.T) {
 		{Tag: "FOO", Variables: variables},
 	}
 
-	scope := newScope(logger, domain.PerformerConfigs{}, stepConfigs)
+	scope := newScope(logger, domain.PerformerConfigs{}, stepConfigs, domain.Storage{})
 	for _, tc := range tt {
 		t.Run(tc.tname, func(t *testing.T) {
 			val, ok := scope.ValueAsRaw(tc.name)
@@ -103,7 +103,7 @@ func TestValueAsRawDynamic(t *testing.T) {
 		},
 	}
 
-	scope := newScope(logger, domain.PerformerConfigs{}, steps)
+	scope := newScope(logger, domain.PerformerConfigs{}, steps, domain.Storage{})
 	scope.current = 1
 
 	scope.steps[0].Result.Variables["token"] = awake.Variable{Type: awake.TypeString, Val: "abc123"}
