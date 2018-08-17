@@ -78,9 +78,9 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) (interface{}, i
 		return struct{}{}, http.StatusInternalServerError, err
 	}
 
-	if job.Active {
-		h.scheduler.AddEntry(cron.EntryID(job.ID), job.Cron, func(id cron.EntryID) {
-			h.runner.AddJob(job)
+	if newJob.Active {
+		h.scheduler.AddEntry(cron.EntryID(newJob.ID), newJob.Cron, func(id cron.EntryID) {
+			h.runner.AddJob(newJob)
 		})
 	}
 
@@ -92,6 +92,8 @@ func (h *Handler) Delete(id int, w http.ResponseWriter, r *http.Request) (interf
 	if err != nil {
 		return struct{}{}, http.StatusInternalServerError, err
 	}
+
+	h.scheduler.RemoveEntry(cron.EntryID(newJob.ID))
 
 	return newJob, http.StatusOK, nil
 }
