@@ -93,7 +93,7 @@ func (s *scope) Variables() awake.Variables {
 	for key, v := range s.currentStep().Conf.Variables {
 		val, err := s.getValue(v)
 		if err != nil {
-			s.log.Println(err)
+			s.addAlert(awake.Alert{Type: awake.AlertWarning, Value: err.Error()})
 			continue
 		}
 		if v.Type == awake.TypeDynamic {
